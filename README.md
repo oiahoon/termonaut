@@ -48,23 +48,44 @@ Termonaut is a lightweight, privacy-focused terminal productivity tracker that g
 
 ### Installation
 
-**macOS/Linux (Homebrew):**
+**GitHub Install (Recommended):**
 ```bash
-brew tap onice/termonaut
-brew install termonaut
-```
-
-**Universal Install (curl):**
-```bash
-curl -sSL https://termonaut.io/install.sh | bash
+# Install from GitHub releases
+curl -sSL https://raw.githubusercontent.com/oiahoon/termonaut/main/install.sh | bash
 ```
 
 **Manual Installation:**
 ```bash
-# Download latest release
+# Download latest release for your platform
+# Linux (x64)
 wget https://github.com/oiahoon/termonaut/releases/latest/download/termonaut-linux-amd64
 chmod +x termonaut-linux-amd64
 sudo mv termonaut-linux-amd64 /usr/local/bin/termonaut
+
+# macOS (Intel)
+wget https://github.com/oiahoon/termonaut/releases/latest/download/termonaut-darwin-amd64
+chmod +x termonaut-darwin-amd64
+sudo mv termonaut-darwin-amd64 /usr/local/bin/termonaut
+
+# macOS (Apple Silicon)
+wget https://github.com/oiahoon/termonaut/releases/latest/download/termonaut-darwin-arm64
+chmod +x termonaut-darwin-arm64
+sudo mv termonaut-darwin-arm64 /usr/local/bin/termonaut
+```
+
+**Build from Source:**
+```bash
+git clone https://github.com/oiahoon/termonaut.git
+cd termonaut
+go build -o termonaut cmd/termonaut/*.go
+sudo mv termonaut /usr/local/bin/
+```
+
+**Future Homebrew Support:**
+```bash
+# Coming soon!
+brew tap oiahoon/termonaut
+brew install termonaut
 ```
 
 ### Setup

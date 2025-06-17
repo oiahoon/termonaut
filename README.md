@@ -81,9 +81,12 @@ go build -o termonaut cmd/termonaut/*.go
 sudo mv termonaut /usr/local/bin/
 ```
 
-**Future Homebrew Support:**
+**Homebrew Installation (Recommended):**
 ```bash
-# Coming soon!
+# Install from Homebrew (coming soon to homebrew-core!)
+brew install termonaut
+
+# Or install from our custom tap (available now)
 brew tap oiahoon/termonaut
 brew install termonaut
 ```
@@ -92,13 +95,15 @@ brew install termonaut
 
 Initialize Termonaut in your shell:
 ```bash
-termonaut init
+termonaut advanced shell install
 ```
 
 This automatically adds hooks to your `~/.bashrc` or `~/.zshrc`. Restart your terminal or run:
 ```bash
 source ~/.bashrc  # or ~/.zshrc
 ```
+
+**📖 Need detailed setup help?** Check our [Quick Start Guide](docs/QUICK_START.md) for step-by-step instructions!
 
 ## 📖 Usage
 

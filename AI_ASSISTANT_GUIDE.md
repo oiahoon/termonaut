@@ -23,7 +23,7 @@ Termonaut is a **gamified terminal productivity tracker** that transforms comman
 ## 🎯 Development Principles
 
 ### 1. User Experience First
-- **Minimal Setup**: `termonaut init` should be all users need
+- **Minimal Setup**: `termonaut advanced shell install` should be all users need
 - **Instant Gratification**: Show immediate value after first commands
 - **Non-Intrusive**: Never interrupt or slow down normal terminal usage
 - **Discoverable**: Features should be easy to find and understand

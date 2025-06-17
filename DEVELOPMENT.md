@@ -197,7 +197,7 @@ make build
 make install-local
 
 # Test shell integration
-termonaut init --shell zsh
+termonaut advanced shell install --shell zsh
 source ~/.zshrc
 ```
 
@@ -372,7 +372,7 @@ termonaut <subcommand> [flags] [arguments]
 ### Subcommands
 
 **Core Commands:**
-- `termonaut init` - Setup shell integration
+- `termonaut advanced shell install` - Setup shell integration
 - `termonaut stats [--period]` - Display statistics
 - `termonaut sessions` - Show session history
 - `termonaut xp` - Show gamification progress

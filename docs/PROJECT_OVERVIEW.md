@@ -82,7 +82,7 @@ termonaut/
 
 ```mermaid
 graph TD
-    A[User installs Termonaut] --> B[Run 'termonaut init']
+    A[User installs Termonaut] --> B[Run 'termonaut advanced shell install']
     B --> C[Shell hooks installed]
     C --> D[User executes commands]
     D --> E[Commands logged automatically]

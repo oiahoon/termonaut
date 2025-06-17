@@ -18,7 +18,7 @@
 - [x] **Shell 集成**: Zsh 和 Bash shell hook 自动安装
 
 ### CLI 界面 (使用 Cobra)
-- [x] **`termonaut init`**: Shell hook 安装和初始化
+- [x] **`termonaut advanced shell install`**: Shell hook 安装和初始化
 - [x] **`termonaut stats`**: 基础统计信息显示
 - [x] **`termonaut config get/set`**: 配置管理
 - [x] **`termonaut log-command`**: 内部命令日志记录
@@ -70,7 +70,7 @@ termonaut/
 
 ### 初始化和设置
 ```bash
-$ ./termonaut init
+$ ./termonaut advanced shell install
 🚀 Termonaut initialized successfully!
 Shell: zsh
 

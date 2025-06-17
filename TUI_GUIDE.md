@@ -112,7 +112,7 @@ The TUI complements the existing CLI commands:
 ## 🎉 Getting Started
 
 1. **Install Termonaut**: Follow the installation guide
-2. **Set up shell integration**: Run `termonaut init`
+2. **Set up shell integration**: Run `termonaut advanced shell install`
 3. **Use your terminal**: Execute some commands to generate data
 4. **Launch TUI**: Run `termonaut tui` to explore your data
 5. **Navigate and enjoy**: Use arrow keys or numbers to explore

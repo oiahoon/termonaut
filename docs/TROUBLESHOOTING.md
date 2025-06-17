@@ -85,7 +85,7 @@ This guide helps you resolve common issues with Termonaut installation, configur
 
 ### Hook Not Working
 
-**Problem**: Commands not being tracked after `termonaut init`
+**Problem**: Commands not being tracked after `termonaut advanced shell install`
 
 **Solutions**:
 1. **Verify Hook Installation**:
@@ -127,7 +127,7 @@ This guide helps you resolve common issues with Termonaut installation, configur
 **Solutions**:
 1. **Use Updated Hook** (if available):
    ```bash
-   termonaut init --force  # Re-install with latest hook
+   termonaut advanced shell install --force  # Re-install with latest hook
    ```
 
 2. **Manual Fix for Zsh**:
@@ -486,6 +486,6 @@ termonaut debug --database-check
 
 If all checks pass and you're still having issues, try:
 1. Restart your terminal completely
-2. Run `termonaut init --force` to reinstall hooks
+2. Run `termonaut advanced shell install --force` to reinstall hooks
 3. Enable debug logging and check for errors
 4. Report the issue with debug information 

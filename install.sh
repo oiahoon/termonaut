@@ -166,11 +166,11 @@ verify_installation() {
 setup_shell_integration() {
     print_status "Setting up shell integration..."
 
-    if termonaut init >/dev/null 2>&1; then
+    if termonaut advanced shell install >/dev/null 2>&1; then
         print_success "Shell integration setup completed!"
         print_warning "Please restart your terminal or run 'source ~/.bashrc' (or ~/.zshrc) to activate Termonaut."
     else
-        print_warning "Shell integration setup failed. You can set it up later with 'termonaut init'."
+        print_warning "Shell integration setup failed. You can set it up later with 'termonaut advanced shell install'."
     fi
 }
 

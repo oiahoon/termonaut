@@ -1,0 +1,4 @@
+8311e05d431199f07fa3d6d38760f8f0ef5fe5d1aa703ae5fb39310613e994ec  termonaut-v0.9.0-darwin-amd64.tar.gz
+8865d2c3a3ea2b2f986bda2a5f74db3b127b7cb2a2efc755d9d77026681cb23f  termonaut-v0.9.0-darwin-arm64.tar.gz
+c5c61d7f99604908bc9e9b16295eb90e8bd67735d19081ab7912356e2e1978f1  termonaut-v0.9.0-linux-amd64.tar.gz
+2859c7c126a6ff74f7586fe4295c4c7c06a1c5c1aedab136d8f90b654d7911f0  termonaut-v0.9.0-linux-arm64.tar.gz

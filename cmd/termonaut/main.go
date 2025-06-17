@@ -19,7 +19,7 @@ import (
 
 var (
 	// Version information (will be set during build)
-	version = "0.4.0-dev"
+	version = "0.9.0-rc"
 	commit  = "unknown"
 	date    = "unknown"
 )
@@ -283,6 +283,8 @@ func runConfigGetCommand(cmd *cobra.Command, args []string) error {
 		fmt.Printf("Idle Timeout: %d minutes\n", cfg.IdleTimeoutMinutes)
 		fmt.Printf("Track Git Repos: %t\n", cfg.TrackGitRepos)
 		fmt.Printf("Command Categories: %t\n", cfg.CommandCategories)
+		fmt.Printf("Easter Eggs Enabled: %t\n", cfg.EasterEggsEnabled)
+		fmt.Printf("Empty Command Stats: %t\n", cfg.EmptyCommandStats)
 		fmt.Printf("Sync Enabled: %t\n", cfg.SyncEnabled)
 		fmt.Printf("Anonymous Mode: %t\n", cfg.AnonymousMode)
 		fmt.Printf("Log Level: %s\n", cfg.LogLevel)
@@ -297,6 +299,10 @@ func runConfigGetCommand(cmd *cobra.Command, args []string) error {
 		fmt.Println(cfg.Theme)
 	case "show_gamification":
 		fmt.Printf("%t\n", cfg.ShowGamification)
+	case "easter_eggs_enabled":
+		fmt.Printf("%t\n", cfg.EasterEggsEnabled)
+	case "empty_command_stats":
+		fmt.Printf("%t\n", cfg.EmptyCommandStats)
 	case "idle_timeout_minutes":
 		fmt.Printf("%d\n", cfg.IdleTimeoutMinutes)
 	case "log_level":
@@ -333,6 +339,16 @@ func runConfigSetCommand(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("invalid boolean value. Must be: true, false")
 		}
 		cfg.ShowGamification = value == "true"
+	case "easter_eggs_enabled":
+		if value != "true" && value != "false" {
+			return fmt.Errorf("invalid boolean value. Must be: true, false")
+		}
+		cfg.EasterEggsEnabled = value == "true"
+	case "empty_command_stats":
+		if value != "true" && value != "false" {
+			return fmt.Errorf("invalid boolean value. Must be: true, false")
+		}
+		cfg.EmptyCommandStats = value == "true"
 	case "log_level":
 		if value != "debug" && value != "info" && value != "warn" && value != "error" {
 			return fmt.Errorf("invalid log_level value. Must be: debug, info, warn, error")
@@ -352,6 +368,22 @@ func runConfigSetCommand(cmd *cobra.Command, args []string) error {
 
 func runLogCommandCommand(cmd *cobra.Command, args []string) error {
 	command := args[0]
+
+	// Check for empty command (just Enter was pressed)
+	trimmedCommand := strings.TrimSpace(command)
+	if trimmedCommand == "" {
+		// Load configuration to check if feature is enabled
+		cfg, err := config.Load()
+		if err != nil {
+			cfg = config.DefaultConfig()
+		}
+		
+		if cfg.EmptyCommandStats {
+			return showQuickStats()
+		} else {
+			return nil // Skip if feature is disabled
+		}
+	}
 
 	// Load configuration
 	cfg, err := config.Load()
@@ -432,6 +464,135 @@ func runLogCommandCommand(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+// showQuickStats displays a concise stats summary when empty command is executed
+func showQuickStats() error {
+	// Load configuration
+	cfg, err := config.Load()
+	if err != nil {
+		cfg = config.DefaultConfig()
+	}
+
+	// Check if feature is enabled
+	if !cfg.EmptyCommandStats {
+		return nil // Feature disabled, do nothing
+	}
+
+	// Initialize logger
+	logger := setupLogger(cfg.LogLevel)
+
+	// Initialize database
+	db, err := database.New(config.GetDataDir(cfg), logger)
+	if err != nil {
+		return nil // Silent fail for background operation
+	}
+	defer db.Close()
+
+	// Get user progress
+	userProgress, err := db.GetUserProgress()
+	if err != nil {
+		return nil // Silent fail
+	}
+
+	// Get basic stats
+	statsCalc := stats.New(db)
+	basicStats, err := statsCalc.GetBasicStats()
+	if err != nil {
+		return nil // Silent fail
+	}
+
+	// Choose display format based on configuration
+	var output string
+	switch cfg.DisplayMode {
+	case "off":
+		return nil // Don't show anything if display is off
+	case "enter", "ps1", "floating":
+		// Show different levels of detail based on theme
+		if cfg.Theme == "minimal" {
+			output = formatMinimalQuickStats(basicStats, userProgress)
+		} else {
+			output = formatRichQuickStats(basicStats, userProgress, cfg.Theme == "emoji")
+		}
+	default:
+		output = formatMinimalQuickStats(basicStats, userProgress)
+	}
+
+	// Output the stats
+	fmt.Print(output)
+	return nil
+}
+
+// formatMinimalQuickStats formats a minimal one-line stats display
+func formatMinimalQuickStats(basicStats *stats.BasicStats, userProgress *models.UserProgress) string {
+	return fmt.Sprintf("📊 Lv.%d | %d cmds | %d streak | %d XP\n",
+		userProgress.CurrentLevel,
+		basicStats.TotalCommands,
+		userProgress.CurrentStreak,
+		userProgress.TotalXP)
+}
+
+// formatRichQuickStats formats a rich multi-line stats display
+func formatRichQuickStats(basicStats *stats.BasicStats, userProgress *models.UserProgress, useEmojis bool) string {
+	var sb strings.Builder
+	
+	if useEmojis {
+		sb.WriteString("🚀 ") 
+	}
+	sb.WriteString(fmt.Sprintf("Level %d", userProgress.CurrentLevel))
+	
+	// Level progress bar
+	if useEmojis {
+		currentLevelXP := userProgress.CurrentLevel * userProgress.CurrentLevel * 100
+		nextLevelXP := (userProgress.CurrentLevel + 1) * (userProgress.CurrentLevel + 1) * 100
+		progressXP := userProgress.TotalXP - currentLevelXP
+		neededXP := nextLevelXP - currentLevelXP
+		
+		if neededXP > 0 {
+			progress := float64(progressXP) / float64(neededXP)
+			barLength := int(progress * 8)
+			
+			sb.WriteString(" [")
+			for i := 0; i < 8; i++ {
+				if i < barLength {
+					sb.WriteString("█")
+				} else {
+					sb.WriteString("░")
+				}
+			}
+			sb.WriteString(fmt.Sprintf("] %d XP", userProgress.TotalXP))
+		}
+	} else {
+		sb.WriteString(fmt.Sprintf(" (%d XP)", userProgress.TotalXP))
+	}
+	
+	sb.WriteString("\n")
+	
+	// Commands and streak info
+	if useEmojis {
+		sb.WriteString(fmt.Sprintf("🎯 %d commands today", basicStats.CommandsToday))
+		if userProgress.CurrentStreak > 0 {
+			streakEmoji := "✨"
+			if userProgress.CurrentStreak >= 7 {
+				streakEmoji = "🔥"
+			}
+			sb.WriteString(fmt.Sprintf(" | %s %d day streak", streakEmoji, userProgress.CurrentStreak))
+		}
+	} else {
+		sb.WriteString(fmt.Sprintf("%d commands today", basicStats.CommandsToday))
+		if userProgress.CurrentStreak > 0 {
+			sb.WriteString(fmt.Sprintf(" | %d day streak", userProgress.CurrentStreak))
+		}
+	}
+	
+	sb.WriteString("\n")
+	
+	// Most used command
+	if basicStats.MostUsedCommand != "" && useEmojis {
+		sb.WriteString(fmt.Sprintf("👑 %s (%dx)\n", basicStats.MostUsedCommand, basicStats.MostUsedCount))
+	}
+	
+	return sb.String()
 }
 
 func setupLogger(level string) *logrus.Logger {

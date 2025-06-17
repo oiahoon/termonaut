@@ -15,6 +15,12 @@ Termonaut is a lightweight, privacy-focused terminal productivity tracker that g
 
 ## ✨ Features
 
+### 💡 **Empty Command Stats** ⭐ *NEW in v0.9.0-rc!*
+- **Instant Stats**: Press Enter on empty command line to see quick stats
+- **Dual Modes**: Minimal one-liner or rich multi-line display
+- **Smart Integration**: Respects your theme and privacy settings
+- **Fully Configurable**: Enable/disable with simple config setting
+
 ### 🔍 **Core Tracking**
 - **Command Logging**: Automatically track every command execution
 - **Session Management**: Intelligent session detection and timing
@@ -24,6 +30,7 @@ Termonaut is a lightweight, privacy-focused terminal productivity tracker that g
 ### 🎮 **Gamification System**
 - **XP & Levels**: Earn experience points for terminal usage with space-themed progression
 - **Achievement Badges**: Unlock 🏅 badges for milestones (100 commands, 7-day streaks, etc.)
+- **Easter Eggs**: 22+ contextual surprises for git, docker, and special moments
 - **New Command Bonuses**: Extra XP for exploring new tools and commands
 - **Streak Rewards**: Maintain daily/weekly usage streaks for motivation
 

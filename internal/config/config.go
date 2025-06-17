@@ -47,6 +47,9 @@ type Config struct {
 	// Easter Eggs
 	EasterEggsEnabled bool `mapstructure:"easter_eggs_enabled"`
 
+	// Quick Stats on Empty Command
+	EmptyCommandStats bool `mapstructure:"empty_command_stats"`
+
 	// Internal
 	DataDir  string `mapstructure:"data_dir"`
 	LogLevel string `mapstructure:"log_level"`
@@ -83,6 +86,9 @@ func DefaultConfig() *Config {
 
 		// Easter Eggs
 		EasterEggsEnabled: true,
+
+		// Quick Stats on Empty Command
+		EmptyCommandStats: true,
 
 		// Internal
 		DataDir:  dataDir,
@@ -160,6 +166,12 @@ func Save(config *Config) error {
 	viper.Set("badge_update_frequency", config.BadgeUpdateFrequency)
 	viper.Set("opt_out_commands", config.OptOutCommands)
 	viper.Set("anonymous_mode", config.AnonymousMode)
+	viper.Set("privacy_sanitizer", config.PrivacySanitizer)
+	viper.Set("sanitize_passwords", config.SanitizePasswords)
+	viper.Set("sanitize_urls", config.SanitizeURLs)
+	viper.Set("sanitize_file_paths", config.SanitizeFilePaths)
+	viper.Set("easter_eggs_enabled", config.EasterEggsEnabled)
+	viper.Set("empty_command_stats", config.EmptyCommandStats)
 	viper.Set("data_dir", config.DataDir)
 	viper.Set("log_level", config.LogLevel)
 
@@ -193,6 +205,7 @@ func setDefaults() {
 	viper.SetDefault("sanitize_urls", true)
 	viper.SetDefault("sanitize_file_paths", true)
 	viper.SetDefault("easter_eggs_enabled", true)
+	viper.SetDefault("empty_command_stats", true)
 	viper.SetDefault("data_dir", dataDir)
 	viper.SetDefault("log_level", "info")
 }

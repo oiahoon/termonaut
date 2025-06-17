@@ -106,12 +106,14 @@ var badgesGenerateCmd = &cobra.Command{
 		}
 
 		// Default markdown format
-		fmt.Println("# Termonaut Badges\n")
+		fmt.Println("# Termonaut Badges")
 		for label, url := range badges {
 			fmt.Printf("![%s](%s)\n", label, url)
 		}
 
-		fmt.Println("\n## Markdown for README:\n")
+		fmt.Println()
+		fmt.Println("## Markdown for README:")
+		fmt.Println()
 		for label, url := range badges {
 			fmt.Printf("![%s](%s) ", label, url)
 		}
@@ -221,7 +223,8 @@ var actionsListCmd = &cobra.Command{
 		actionsManager := github.NewActionsManager(repoOwner, repoName)
 		templates := actionsManager.GetWorkflowTemplates()
 
-		fmt.Println("Available GitHub Actions workflow templates:\n")
+		fmt.Println("Available GitHub Actions workflow templates:")
+		fmt.Println()
 		for _, template := range templates {
 			fmt.Printf("• %s\n  %s\n\n", template.Name, template.Description)
 		}

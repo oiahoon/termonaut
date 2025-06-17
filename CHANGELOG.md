@@ -5,21 +5,46 @@ All notable changes to Termonaut will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - v0.9.0 Release Candidate
+## [0.9.0-rc] - 2024-01-XX - Release Candidate: Enhanced UX & Empty Command Stats
 
 ### Added
-- Troubleshooting documentation for common issues
-- API documentation for internal interfaces
-- Enhanced error handling and validation
-- Release preparation and build optimization
+- **💡 Empty Command Stats Feature** 
+  - Quick stats display when pressing Enter on empty command line
+  - Configurable display modes: minimal and rich
+  - `empty_command_stats` configuration option with full control
+  - Respects privacy settings and display preferences
+  - Seamless integration with existing shell hooks
+- **📖 Comprehensive Documentation**
+  - Troubleshooting guide for common issues
+  - Empty command demo script with usage examples
+  - Enhanced API documentation for internal interfaces
+  - Complete configuration reference
 
 ### Changed
-- Performance optimizations for TUI and CLI commands
-- Improved shell hook integration (job control message fix in progress)
+- **⚡ Enhanced Configuration System**
+  - Fixed configuration saving for all new options (easter_eggs_enabled, empty_command_stats, privacy settings)
+  - Improved configuration validation and error handling
+  - Better default value management with viper integration
+- **🎮 Improved Easter Egg Integration**
+  - Empty commands don't trigger Easter Eggs (by design)
+  - Better context awareness and conditional triggering
+  - Enhanced probability system for varied experiences
 
 ### Fixed
-- Various UI/UX improvements in TUI interface
-- Configuration validation enhancements
+- **🔧 Configuration Management**
+  - Fixed configuration save/load issues for new fields
+  - Proper handling of all privacy and feature toggle settings
+  - Resolved viper configuration persistence problems
+- **🐚 Shell Integration Improvements**
+  - Better empty command detection in shell hooks
+  - Improved silent operation for background processes
+  - Enhanced logging and debugging capabilities
+
+### Technical Improvements
+- Code organization and error handling enhancements
+- Performance optimizations for stats calculation
+- Better memory management in TUI components
+- Comprehensive feature flag system implementation
 
 ## [0.8.0] - 2024-01-XX - Advanced Features & User Enhancements
 

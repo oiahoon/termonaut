@@ -116,7 +116,7 @@ func (h *HookInstaller) installZshHook() error {
 	hook := fmt.Sprintf(`
 # Termonaut shell integration
 termonaut_preexec() {
-    %s log-command "$1" &
+    { %s log-command "$1" >/dev/null 2>&1 & } 2>/dev/null
 }
 
 # Check if preexec_functions exists, if not create it
@@ -139,7 +139,7 @@ func (h *HookInstaller) installBashHook() error {
 # Termonaut shell integration
 termonaut_log_command() {
     if [ -n "$BASH_COMMAND" ]; then
-        %s log-command "$BASH_COMMAND" &
+        { %s log-command "$BASH_COMMAND" >/dev/null 2>&1 & } 2>/dev/null
     fi
 }
 

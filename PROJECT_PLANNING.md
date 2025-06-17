@@ -188,18 +188,18 @@ This document outlines the complete development roadmap for Termonaut, from init
 ### Phase 4: Integration & Polish (v0.6 - v0.9) 📋 **PLANNED**
 **Timeline: 8-10 weeks**
 
-**v0.6.0 - GitHub Integration** *(Week 19-21)*
-- [ ] **GitHub Actions Support**
-  - [ ] Workflow templates
-  - [ ] Badge generation system
-  - [ ] Automated stats updates
-  - [ ] Repository integration
+**v0.6.0 - GitHub Integration** *(Week 19-21)* ✅ **COMPLETED**
+- [x] **GitHub Actions Support**
+  - [x] Workflow templates
+  - [x] Badge generation system
+  - [x] Automated stats updates
+  - [x] Repository integration
 
-- [ ] **Social Features**
-  - [ ] Shareable stat summaries
-  - [ ] Profile generation
-  - [ ] Dynamic badge creation
-  - [ ] Social media snippets
+- [x] **Social Features**
+  - [x] Shareable stat summaries
+  - [x] Profile generation
+  - [x] Dynamic badge creation
+  - [x] Social media snippets
 
 **v0.7.0 - Performance & Reliability** *(Week 22-24)*
 - [ ] **Performance Optimization**

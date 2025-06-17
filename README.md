@@ -50,7 +50,7 @@ Termonaut is a lightweight, privacy-focused terminal productivity tracker that g
 
 **macOS/Linux (Homebrew):**
 ```bash
-brew tap yourusername/termonaut
+brew tap onice/termonaut
 brew install termonaut
 ```
 
@@ -62,7 +62,7 @@ curl -sSL https://termonaut.io/install.sh | bash
 **Manual Installation:**
 ```bash
 # Download latest release
-wget https://github.com/yourusername/termonaut/releases/latest/download/termonaut-linux-amd64
+wget https://github.com/oiahoon/termonaut/releases/latest/download/termonaut-linux-amd64
 chmod +x termonaut-linux-amd64
 sudo mv termonaut-linux-amd64 /usr/local/bin/termonaut
 ```

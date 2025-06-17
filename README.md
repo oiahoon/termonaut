@@ -250,7 +250,7 @@ We welcome contributions! Please see our [Development Guide](DEVELOPMENT.md) for
 ### Quick Development Setup
 
 ```bash
-git clone https://github.com/yourusername/termonaut.git
+git clone https://github.com/oiahoon/termonaut.git
 cd termonaut
 make dev-setup    # Install dependencies and dev tools
 make test         # Run test suite
@@ -284,4 +284,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 *Transform your terminal from a tool into an adventure. Every command is a step toward mastery.*
 
-For detailed documentation, visit our [Wiki](https://github.com/yourusername/termonaut/wiki) or run `termonaut help`.
+For detailed documentation, visit our [Wiki](https://github.com/oiahoon/termonaut/wiki) or run `termonaut help`.

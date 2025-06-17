@@ -37,8 +37,15 @@ type Config struct {
 	BadgeUpdateFrequency string `mapstructure:"badge_update_frequency"`
 
 	// Privacy
-	OptOutCommands []string `mapstructure:"opt_out_commands"`
-	AnonymousMode  bool     `mapstructure:"anonymous_mode"`
+	OptOutCommands    []string `mapstructure:"opt_out_commands"`
+	AnonymousMode     bool     `mapstructure:"anonymous_mode"`
+	PrivacySanitizer  bool     `mapstructure:"privacy_sanitizer"`
+	SanitizePasswords bool     `mapstructure:"sanitize_passwords"`
+	SanitizeURLs      bool     `mapstructure:"sanitize_urls"`
+	SanitizeFilePaths bool     `mapstructure:"sanitize_file_paths"`
+	
+	// Easter Eggs
+	EasterEggsEnabled bool `mapstructure:"easter_eggs_enabled"`
 
 	// Internal
 	DataDir  string `mapstructure:"data_dir"`
@@ -67,8 +74,15 @@ func DefaultConfig() *Config {
 		BadgeUpdateFrequency: "daily",
 
 		// Privacy
-		OptOutCommands: []string{"password", "secret", "token"},
-		AnonymousMode:  false,
+		OptOutCommands:    []string{"password", "secret", "token"},
+		AnonymousMode:     false,
+		PrivacySanitizer:  true,
+		SanitizePasswords: true,
+		SanitizeURLs:      true,
+		SanitizeFilePaths: true,
+
+		// Easter Eggs
+		EasterEggsEnabled: true,
 
 		// Internal
 		DataDir:  dataDir,
@@ -174,6 +188,11 @@ func setDefaults() {
 	viper.SetDefault("badge_update_frequency", "daily")
 	viper.SetDefault("opt_out_commands", []string{"password", "secret", "token"})
 	viper.SetDefault("anonymous_mode", false)
+	viper.SetDefault("privacy_sanitizer", true)
+	viper.SetDefault("sanitize_passwords", true)
+	viper.SetDefault("sanitize_urls", true)
+	viper.SetDefault("sanitize_file_paths", true)
+	viper.SetDefault("easter_eggs_enabled", true)
 	viper.SetDefault("data_dir", dataDir)
 	viper.SetDefault("log_level", "info")
 }

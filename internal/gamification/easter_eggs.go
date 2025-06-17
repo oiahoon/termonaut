@@ -50,6 +50,24 @@ func (eem *EasterEggManager) CheckForEasterEgg(context *EasterEggContext) string
 	return ""
 }
 
+// isCommonCommand checks if a command is a common shell command
+func isCommonCommand(cmd string) bool {
+	commonCommands := []string{
+		"ls", "cd", "pwd", "cat", "echo", "grep", "find", "cp", "mv", "rm", "mkdir", "rmdir",
+		"chmod", "chown", "ps", "top", "kill", "which", "man", "git", "vim", "nano", "less",
+		"more", "head", "tail", "sort", "uniq", "wc", "tar", "zip", "curl", "wget", "ssh",
+		"scp", "sudo", "su", "systemctl", "service", "apt", "yum", "brew", "pip", "npm",
+		"docker", "kubectl", "make", "gcc", "python", "node", "go", "java", "mysql", "psql",
+	}
+	
+	for _, common := range commonCommands {
+		if strings.EqualFold(cmd, common) {
+			return true
+		}
+	}
+	return false
+}
+
 // selectRandomMessage selects a random message from the list
 func (eem *EasterEggManager) selectRandomMessage(messages []string) string {
 	if len(messages) == 0 {
@@ -178,9 +196,187 @@ func getEasterEggTriggers() []EasterEggTrigger {
 			Probability: 0.6,
 		},
 		{
+			ID: "exit_command",
+			Condition: func(ctx *EasterEggContext) bool {
+				cmd := strings.ToLower(strings.TrimSpace(ctx.LastCommand))
+				return cmd == "exit" || cmd == "logout" || cmd == "quit"
+			},
+			Messages: []string{
+				"🎵 You can check out anytime you like... but you can never leave! 🏨",
+				"👋 See you later, space cowboy! 🤠",
+				"🚪 Goodbye! Don't forget to save your work! 💾",
+				"🌅 Until next time, terminal warrior! ⚔️",
+				"🎭 Exit, stage left! 🎪",
+				"🚀 Safe travels through the digital cosmos! ✨",
+			},
+			Probability: 0.7,
+		},
+		{
+			ID: "consecutive_errors",
+			Condition: func(ctx *EasterEggContext) bool {
+				if len(ctx.CommandHistory) < 3 {
+					return false
+				}
+				// Check last 3 commands for consecutive errors (simulated)
+				errorCommands := 0
+				for i := len(ctx.CommandHistory) - 3; i < len(ctx.CommandHistory); i++ {
+					cmd := ctx.CommandHistory[i]
+					// Simple heuristic: commands with typos or non-existent commands
+					if strings.Contains(cmd, "command not found") || 
+					   len(strings.Fields(cmd)) == 1 && !isCommonCommand(cmd) {
+						errorCommands++
+					}
+				}
+				return errorCommands >= 3
+			},
+			Messages: []string{
+				"🤖 Don't give up, shell-ronin! 🥷",
+				"💪 Every master was once a disaster! 🌟",
+				"🎯 Practice makes perfect! Keep trying! 🔥",
+				"🧠 Errors are just learning opportunities in disguise! 📚",
+				"⚡ The terminal believes in you! 💖",
+				"🦾 You're building character with every mistake! 💎",
+			},
+			Probability: 0.8,
+		},
+		{
+			ID: "special_time_420",
+			Condition: func(ctx *EasterEggContext) bool {
+				now := time.Now()
+				return (now.Hour() == 4 && now.Minute() == 20) ||
+					   (now.Hour() == 16 && now.Minute() == 20) // 4:20 PM too
+			},
+			Messages: []string{
+				"🌿 Wakey wakey, hacker! 👁️",
+				"⏰ 4:20 - Time to elevate your coding! 🚀",
+				"🍃 High-level programming detected! 🔥",
+				"🌱 Growing your skills one command at a time! 📈",
+				"💚 Blaze it... with productivity! ⚡",
+			},
+			Probability: 0.9,
+		},
+		{
+			ID: "challenge_completed",
+			Condition: func(ctx *EasterEggContext) bool {
+				// Trigger when user completes a significant milestone
+				return ctx.CommandsInTimeframe >= 100 && ctx.TimeframeDuration <= 24*time.Hour
+			},
+			Messages: []string{
+				"🧠 You are becoming... unstoppable! 💪⚡",
+				"🏆 Command line mastery level: LEGENDARY! 👑",
+				"🚀 Houston, we have a terminal genius! 🛸",
+				"⭐ Your skills are reaching cosmic levels! 🌌",
+				"💎 Forged in the fires of the terminal! 🔥",
+			},
+			Probability: 1.0,
+		},
+		{
+			ID: "midnight_hacker",
+			Condition: func(ctx *EasterEggContext) bool {
+				hour := time.Now().Hour()
+				return hour >= 0 && hour <= 2 // Between midnight and 2 AM
+			},
+			Messages: []string{
+				"🌙 Midnight oil burning bright! 🔥",
+				"🦉 Night owl mode activated! 🌃",
+				"⚡ The terminal never sleeps! 💻",
+				"🌟 Coding under the stars! ✨",
+				"🦇 Creature of the night! 🌒",
+				"☕ Coffee level: MAXIMUM! ☕",
+			},
+			Probability: 0.6,
+		},
+		{
+			ID: "git_push_force",
+			Condition: func(ctx *EasterEggContext) bool {
+				cmd := strings.ToLower(ctx.LastCommand)
+				return strings.Contains(cmd, "git push") && 
+					   (strings.Contains(cmd, "--force") || strings.Contains(cmd, "-f"))
+			},
+			Messages: []string{
+				"⚠️ Force push detected! May the Git be with you! 🌟",
+				"💥 Going nuclear on that repository! 💣",
+				"🚨 Red alert! Force push in progress! 🚨",
+				"⚡ With great power comes great responsibility! 🕷️",
+				"🙏 Hoping your teammates forgive you! 😅",
+			},
+			Probability: 0.8,
+		},
+		{
+			ID: "massive_list",
+			Condition: func(ctx *EasterEggContext) bool {
+				cmd := strings.ToLower(ctx.LastCommand)
+				return strings.HasPrefix(cmd, "ls") && 
+					   (strings.Contains(cmd, "/") || strings.Contains(cmd, "*"))
+			},
+			Messages: []string{
+				"📂 Exploring the file system like a true explorer! 🗺️",
+				"🔍 Detective mode: ON! 🕵️‍♂️",
+				"📋 Cataloging the digital universe! 🌌",
+				"🗃️ File archaeology in progress! ⛏️",
+				"📊 Data discovery mission activated! 🚀",
+			},
+			Probability: 0.3,
+		},
+		{
+			ID: "rm_danger",
+			Condition: func(ctx *EasterEggContext) bool {
+				cmd := strings.ToLower(ctx.LastCommand)
+				return strings.HasPrefix(cmd, "rm") && 
+					   (strings.Contains(cmd, "-r") || strings.Contains(cmd, "*"))
+			},
+			Messages: []string{
+				"⚠️ Danger zone! Hope you know what you're doing! 😰",
+				"💣 Destructive power activated! 💥",
+				"🗑️ Spring cleaning or digital chaos? 🤔",
+				"⚡ With great rm comes great responsibility! 🕷️",
+				"🙏 RIP files... may they rest in /dev/null 👻",
+			},
+			Probability: 0.7,
+		},
+		{
+			ID: "productivity_beast",
+			Condition: func(ctx *EasterEggContext) bool {
+				return ctx.CommandsInTimeframe >= 50 && ctx.TimeframeDuration <= 30*time.Minute
+			},
+			Messages: []string{
+				"🔥 Productivity BEAST mode! 🦾",
+				"⚡ Terminal velocity achieved! 🚀",
+				"💨 Speed of light coding! ⚡",
+				"🌪️ Command line tornado! 🌪️",
+				"🏃‍♂️ Gotta go fast! 💨",
+			},
+			Probability: 0.9,
+		},
+		{
+			ID: "ascii_art_celebration",
+			Condition: func(ctx *EasterEggContext) bool {
+				// Random chance for ASCII art
+				return time.Now().Second()%42 == 0 // Every 42nd second
+			},
+			Messages: []string{
+				"🎨 ASCII Art Time!\n" +
+					"     🚀\n" +
+					"    /|\\\n" +
+					"   / | \\\n" +
+					"  |  T  |\n" +
+					"  |     |\n" +
+					"  ||   ||\n" +
+					"  /\\   /\\\n" +
+					"Termonaut Power!",
+				"🎭 Command Line Theater!\n" +
+					"  ╭─────────╮\n" +
+					"  │ > Hello │\n" +
+					"  │   World │\n" +
+					"  ╰─────────╯\n" +
+					"The terminal speaks!",
+			},
+			Probability: 0.2,
+		},
+		{
 			ID: "hidden_command",
 			Condition: func(ctx *EasterEggContext) bool {
-				secretCommands := []string{"hero", "secret", "konami", "xyzzy", "plugh"}
+				secretCommands := []string{"hero", "secret", "konami", "xyzzy", "plugh", "42", "sudo make me a sandwich"}
 				cmd := strings.ToLower(ctx.LastCommand)
 				for _, secret := range secretCommands {
 					if strings.Contains(cmd, secret) {
@@ -195,6 +391,8 @@ func getEasterEggTriggers() []EasterEggTrigger {
 				"🔍 Hidden feature unlocked! You're a true explorer!",
 				"🏆 Secret achievement: Command line archaeologist!",
 				"✨ Magic word detected! Abracadabra!",
+				"🤖 sudo: make me a sandwich? 🥪 (Nice try!)",
+				"📖 42: The answer to life, universe, and everything! 🌌",
 			},
 			Probability: 1.0, // Always trigger for secret commands
 		},

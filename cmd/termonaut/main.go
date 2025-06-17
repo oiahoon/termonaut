@@ -3,10 +3,13 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/oiahoon/termonaut/internal/config"
 	"github.com/oiahoon/termonaut/internal/database"
+	"github.com/oiahoon/termonaut/internal/gamification"
+	"github.com/oiahoon/termonaut/internal/privacy"
 	"github.com/oiahoon/termonaut/internal/shell"
 	"github.com/oiahoon/termonaut/internal/stats"
 	"github.com/oiahoon/termonaut/pkg/models"
@@ -131,6 +134,7 @@ func init() {
 	rootCmd.AddCommand(heatmapCmd)
 	rootCmd.AddCommand(dashboardCmd)
 	rootCmd.AddCommand(tuiCmd)
+	rootCmd.AddCommand(createAdvancedCmd())
 
 	// Config subcommands
 	configCmd.AddCommand(configGetCmd)
@@ -356,6 +360,15 @@ func runLogCommandCommand(cmd *cobra.Command, args []string) error {
 		cfg = config.DefaultConfig()
 	}
 
+	// Initialize command sanitizer for privacy protection
+	sanitizer := privacy.NewCommandSanitizer(privacy.DefaultSanitizationConfig())
+	
+	// Sanitize command for privacy
+	sanitizedCommand, shouldIgnore := sanitizer.SanitizeCommand(command)
+	if shouldIgnore {
+		return nil // Skip logging this command entirely
+	}
+
 	// Initialize logger (with minimal output for background operation)
 	logger := logrus.New()
 	logger.SetLevel(logrus.ErrorLevel) // Only log errors for background operation
@@ -379,12 +392,40 @@ func runLogCommandCommand(cmd *cobra.Command, args []string) error {
 	commandRecord := &models.Command{
 		Timestamp: time.Now(),
 		SessionID: session.ID,
-		Command:   command,
+		Command:   sanitizedCommand, // Use sanitized command
 		ExitCode:  0, // We don't have exit code from preexec hook
 		CWD:       shell.GetCurrentWorkingDir(),
 	}
 
-	// Store command with gamification (XP and achievements)
+	// Check for Easter Eggs (only if enabled in config)
+	if cfg.ShowGamification {
+		easterEggManager := gamification.NewEasterEggManager()
+		
+		// Get recent command history for context
+		recentCommands, _ := db.GetRecentCommands(10)
+		var commandHistory []string
+		for _, recentCmd := range recentCommands {
+			commandHistory = append(commandHistory, recentCmd.Command)
+		}
+		
+		easterEggContext := &gamification.EasterEggContext{
+			CommandsInTimeframe:    len(recentCommands),
+			TimeframeDuration:      time.Hour, // Last hour
+			IdleDuration:          time.Since(session.StartTime),
+			IsFirstCommandToday:   isFirstCommandToday(recentCommands),
+			LastCommand:          sanitizedCommand,
+			CommandHistory:       commandHistory,
+			QuotesMismatched:     hasUnmatchedQuotes(sanitizedCommand),
+		}
+		
+		if easterEgg := easterEggManager.CheckForEasterEgg(easterEggContext); easterEgg != "" {
+			// Store easter egg for display (could be shown in stats or dashboard)
+			// For now, we'll just log it silently
+			logger.Debug("Easter egg triggered: ", easterEgg)
+		}
+	}
+
+	// Store command with enhanced gamification (XP, achievements, privacy)
 	if err := db.StoreCommandWithXP(commandRecord); err != nil {
 		// Silent fail for background operation
 		return nil
@@ -410,4 +451,30 @@ func setupLogger(level string) *logrus.Logger {
 	}
 
 	return logger
+}
+
+// isFirstCommandToday checks if this is the first command executed today
+func isFirstCommandToday(recentCommands []*models.Command) bool {
+	if len(recentCommands) == 0 {
+		return true
+	}
+	
+	now := time.Now()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	
+	for _, cmd := range recentCommands {
+		if cmd.Timestamp.After(today) {
+			return false // Found another command today
+		}
+	}
+	
+	return true // No commands found today
+}
+
+// hasUnmatchedQuotes checks if the command has unmatched quotes
+func hasUnmatchedQuotes(command string) bool {
+	singleQuotes := strings.Count(command, "'")
+	doubleQuotes := strings.Count(command, "\"")
+	
+	return singleQuotes%2 != 0 || doubleQuotes%2 != 0
 }

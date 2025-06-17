@@ -16,8 +16,10 @@ const (
 	Zsh ShellType = "zsh"
 	// Bash shell
 	Bash ShellType = "bash"
-	// Fish shell (future support)
+	// Fish shell
 	Fish ShellType = "fish"
+	// PowerShell
+	PowerShell ShellType = "powershell"
 )
 
 // HookInstaller handles shell hook installation
@@ -48,6 +50,10 @@ func (h *HookInstaller) Install() error {
 		return h.installZshHook()
 	case Bash:
 		return h.installBashHook()
+	case Fish:
+		return h.installFishHook()
+	case PowerShell:
+		return h.installPowerShellHook()
 	default:
 		return fmt.Errorf("unsupported shell: %s", h.shellType)
 	}
@@ -60,6 +66,10 @@ func (h *HookInstaller) Uninstall() error {
 		return h.uninstallZshHook()
 	case Bash:
 		return h.uninstallBashHook()
+	case Fish:
+		return h.uninstallFishHook()
+	case PowerShell:
+		return h.uninstallPowerShellHook()
 	default:
 		return fmt.Errorf("unsupported shell: %s", h.shellType)
 	}
@@ -106,6 +116,16 @@ func detectShell() (ShellType, string, error) {
 		}
 		bashProfile := filepath.Join(homeDir, ".bash_profile")
 		return Bash, bashProfile, nil
+	} else if strings.Contains(shell, "fish") {
+		configDir := filepath.Join(homeDir, ".config", "fish")
+		configFile := filepath.Join(configDir, "config.fish")
+		return Fish, configFile, nil
+	} else if strings.Contains(shell, "pwsh") || strings.Contains(shell, "powershell") {
+		// PowerShell profile path varies by OS
+		if err := os.MkdirAll(filepath.Join(homeDir, "Documents", "PowerShell"), 0755); err == nil {
+			configFile := filepath.Join(homeDir, "Documents", "PowerShell", "Microsoft.PowerShell_profile.ps1")
+			return PowerShell, configFile, nil
+		}
 	}
 
 	return "", "", fmt.Errorf("unsupported shell: %s", shell)
@@ -116,7 +136,23 @@ func (h *HookInstaller) installZshHook() error {
 	hook := fmt.Sprintf(`
 # Termonaut shell integration
 termonaut_preexec() {
-    { %s log-command "$1" >/dev/null 2>&1 & } 2>/dev/null
+    # Silent background execution with comprehensive job control suppression
+    {
+        # Create a completely detached subshell
+        (
+            # Disable all job control and output
+            set +m 2>/dev/null
+            unset HISTFILE 2>/dev/null
+            exec </dev/null >/dev/null 2>&1
+            
+            # Run termonaut in completely isolated environment
+            %s log-command "$1" &
+            
+            # Force exit to prevent any shell interaction
+            exit 0
+        ) &
+        disown %%- 2>/dev/null || true
+    } 2>/dev/null
 }
 
 # Check if preexec_functions exists, if not create it
@@ -139,7 +175,23 @@ func (h *HookInstaller) installBashHook() error {
 # Termonaut shell integration
 termonaut_log_command() {
     if [ -n "$BASH_COMMAND" ]; then
-        { %s log-command "$BASH_COMMAND" >/dev/null 2>&1 & } 2>/dev/null
+        # Silent background execution with comprehensive job control suppression
+        {
+            # Create a completely detached subshell
+            (
+                # Disable all job control and output
+                set +m 2>/dev/null
+                unset HISTFILE 2>/dev/null
+                exec </dev/null >/dev/null 2>&1
+                
+                # Run termonaut in completely isolated environment
+                %s log-command "$BASH_COMMAND" &
+                
+                # Force exit to prevent any shell interaction
+                exit 0
+            ) &
+            disown $! 2>/dev/null || true
+        } 2>/dev/null
     fi
 }
 
@@ -158,6 +210,64 @@ func (h *HookInstaller) uninstallZshHook() error {
 // uninstallBashHook removes the Bash hook
 func (h *HookInstaller) uninstallBashHook() error {
 	return h.removeFromConfigFile("# Termonaut shell integration", "trap 'termonaut_log_command' DEBUG")
+}
+
+// installFishHook installs the Fish shell hook
+func (h *HookInstaller) installFishHook() error {
+	hook := fmt.Sprintf(`
+# Termonaut shell integration
+function termonaut_preexec --on-event fish_preexec
+    %s log-command "$argv" >/dev/null 2>&1 &
+    disown
+end
+`, h.binaryPath)
+
+	return h.appendToConfigFile(hook)
+}
+
+// installPowerShellHook installs the PowerShell hook
+func (h *HookInstaller) installPowerShellHook() error {
+	hook := fmt.Sprintf(`
+# Termonaut shell integration
+function Invoke-TermonautLogging {
+    param($Command)
+    try {
+        Start-Job -ScriptBlock {
+            param($BinaryPath, $Cmd)
+            & $BinaryPath log-command $Cmd 2>$null
+        } -ArgumentList "%s", $Command | Out-Null
+    } catch {
+        # Silently ignore errors
+    }
+}
+
+# PowerShell command history hook
+$PSDefaultParameterValues['*:Verbose'] = $false
+$PSDefaultParameterValues['*:Debug'] = $false
+
+# Override the prompt to capture commands
+function global:prompt {
+    $history = Get-History -Count 1 -ErrorAction SilentlyContinue
+    if ($history -and $history.CommandLine) {
+        Invoke-TermonautLogging -Command $history.CommandLine
+    }
+    
+    # Return original prompt
+    "PS $($executionContext.SessionState.Path.CurrentLocation)$('>' * ($nestedPromptLevel + 1)) "
+}
+`, h.binaryPath)
+
+	return h.appendToConfigFile(hook)
+}
+
+// uninstallFishHook removes the Fish hook
+func (h *HookInstaller) uninstallFishHook() error {
+	return h.removeFromConfigFile("# Termonaut shell integration", "end")
+}
+
+// uninstallPowerShellHook removes the PowerShell hook
+func (h *HookInstaller) uninstallPowerShellHook() error {
+	return h.removeFromConfigFile("# Termonaut shell integration", "}")
 }
 
 // appendToConfigFile appends content to the shell config file

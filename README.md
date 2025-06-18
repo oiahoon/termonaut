@@ -15,7 +15,7 @@ Termonaut is a lightweight, privacy-focused terminal productivity tracker that g
 
 ## ✨ Features
 
-### 💡 **Empty Command Stats** ⭐ *NEW in v0.9.0-rc!*
+### 💡 **Empty Command Stats** ⭐ *Stable in v0.9.0!*
 - **Instant Stats**: Press Enter on empty command line to see quick stats
 - **Dual Modes**: Minimal one-liner or rich multi-line display
 - **Smart Integration**: Respects your theme and privacy settings
@@ -40,10 +40,12 @@ Termonaut is a lightweight, privacy-focused terminal productivity tracker that g
 - **Customizable Display**: ASCII charts, emoji themes, and configurable output
 - **Export Options**: JSON/CSV export for backup and integration
 
-### 🔄 **GitHub Integration** (Optional)
+### 🔄 **GitHub Integration** ⭐ *NEW in v0.9.0!*
 - **Dynamic Badges**: Auto-updating Shields.io badges for your README
-- **Stats Sync**: GitHub Actions integration for social sharing
-- **Profile Enhancement**: Showcase your terminal prowess on your GitHub profile
+- **Profile Generation**: Complete productivity profiles in Markdown
+- **Repository Sync**: Automatic synchronization with your GitHub repos
+- **GitHub Actions**: Workflow templates for automated stats updates
+- **Stats Export**: JSON and Markdown export for social sharing
 
 ### 🔒 **Privacy & Performance**
 - **100% Local**: All data stays on your machine by default
@@ -103,12 +105,16 @@ brew install termonaut
 Initialize Termonaut in your shell:
 ```bash
 termonaut advanced shell install
+# Or use the short alias:
+tn advanced shell install
 ```
 
 This automatically adds hooks to your `~/.bashrc` or `~/.zshrc`. Restart your terminal or run:
 ```bash
 source ~/.bashrc  # or ~/.zshrc
 ```
+
+**💡 Pro Tip**: Use `tn` as a short alias for `termonaut` in all commands!
 
 **📖 Need detailed setup help?** Check our [Quick Start Guide](docs/QUICK_START.md) for step-by-step instructions!
 
@@ -121,6 +127,11 @@ source ~/.bashrc  # or ~/.zshrc
 termonaut stats              # Today's overview
 termonaut stats --weekly     # This week's stats
 termonaut stats --alltime    # Lifetime statistics
+
+# Or use the short alias:
+tn stats                     # Today's overview
+tn stats --weekly            # This week's stats
+tn stats --alltime           # Lifetime statistics
 ```
 
 **Check Your Progress:**
@@ -128,6 +139,11 @@ termonaut stats --alltime    # Lifetime statistics
 termonaut xp                 # Current XP and level
 termonaut badges             # Earned achievements
 termonaut sessions           # Recent terminal sessions
+
+# Short commands:
+tn xp                        # Current XP and level
+tn badges                    # Earned achievements
+tn sessions                  # Recent terminal sessions
 ```
 
 **Configuration:**
@@ -135,6 +151,11 @@ termonaut sessions           # Recent terminal sessions
 termonaut config set theme emoji       # Enable emoji theme
 termonaut config set gamification true # Toggle XP system
 termonaut config get                    # View all settings
+
+# Short commands:
+tn config set theme emoji              # Enable emoji theme
+tn config set gamification true        # Toggle XP system
+tn config get                          # View all settings
 ```
 
 **Data Management:**

@@ -1,8 +1,8 @@
 {
   "Achievements": "https://img.shields.io/badge/Achievements-5%2F10-blue?style=flat-square\u0026logo=terminal\u0026logoColor=white",
-  "Commands": "https://img.shields.io/badge/Commands-34-lightgrey?style=flat-square\u0026logo=terminal\u0026logoColor=white",
-  "Last Active": "https://img.shields.io/badge/Last+Active-8h+ago-yellow?style=flat-square\u0026logo=terminal\u0026logoColor=white",
+  "Commands": "https://img.shields.io/badge/Commands-124-green?style=flat-square\u0026logo=terminal\u0026logoColor=white",
+  "Last Active": "https://img.shields.io/badge/Last+Active-5h+ago-green?style=flat-square\u0026logo=terminal\u0026logoColor=white",
   "Productivity": "https://img.shields.io/badge/Productivity-80.0%25-green?style=flat-square\u0026logo=terminal\u0026logoColor=white",
-  "Streak": "https://img.shields.io/badge/Streak-1+days-red?style=flat-square\u0026logo=terminal\u0026logoColor=white",
-  "XP": "https://img.shields.io/badge/XP-Level+2+%28192%2F900%29-lightgrey?style=flat-square\u0026logo=terminal\u0026logoColor=white"
+  "Streak": "https://img.shields.io/badge/Streak-2+days-red?style=flat-square\u0026logo=terminal\u0026logoColor=white",
+  "XP": "https://img.shields.io/badge/XP-Level+4+%281241%2F2500%29-lightgrey?style=flat-square\u0026logo=terminal\u0026logoColor=white"
 }

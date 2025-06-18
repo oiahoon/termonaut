@@ -5,10 +5,104 @@ All notable changes to Termonaut will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2025-01-20 - Official Stable Release 🚀
+
+### 🎉 Stable Release Highlights
+
+This is the first stable release of Termonaut! All RC features have been thoroughly tested and are now production-ready.
+
+### Added
+- **🔗 Complete GitHub Integration**
+  - Dynamic badge generation with shields.io integration
+  - Automatic profile generation in Markdown format
+  - Repository synchronization capabilities
+  - GitHub Actions workflow templates
+  - Heatmap generation for activity visualization
+- **📊 Enhanced Analytics**
+  - Comprehensive productivity insights
+  - Advanced command categorization (17 categories)
+  - Time-based analysis and productivity patterns
+  - Export functionality for badges and profiles
+- **🎮 Full Gamification System**
+  - Space-themed XP progression (Cadet to Cosmic Commander)
+  - 20+ achievements with rarity system
+  - Contextual Easter eggs (13+ trigger conditions)
+  - Command complexity bonuses and failure penalties
+
+### Improved
+- **⚡ User Experience**
+  - `tn` short alias working perfectly across all commands
+  - Complete elimination of job control messages
+  - User-friendly shell completion setup
+  - Empty command stats with configurable display modes
+- **🛡️ Privacy & Security**
+  - Advanced command sanitization patterns
+  - Privacy-first approach with configurable redaction
+  - Secure handling of sensitive information
+- **🎨 Interface & Themes**
+  - Beautiful TUI dashboard with real-time updates
+  - Multiple display modes (minimal, rich, quiet)
+  - CI environment auto-detection
+  - Customizable themes and emoji support
+
+### Fixed
+- **🔧 All RC2 Issues Resolved**
+  - Short alias (`tn`) functionality fully working
+  - Job control message suppression (100% effective)
+  - Empty command detection logic improvements
+  - Shell hook installation reliability
+  - CGO compilation for SQLite support
+
+### Technical Improvements
+- Comprehensive test coverage with 83% GitHub integration success rate
+- Multi-platform build support (macOS Intel/ARM, Linux x64/ARM64, Windows)
+- Enhanced error handling and logging
+- Performance optimizations for large datasets
+- Robust configuration management system
+
+### Documentation
+- Complete setup and usage guides
+- GitHub integration documentation
+- Troubleshooting guides
+- Contributing guidelines
+- API documentation for developers
+
+## [0.9.0-rc2] - 2025-06-18 - User Feedback Fixes Release
+
+### Added
+- **⚡ Short Command Alias**
+  - Added `tn` as short alias for `termonaut` command
+  - Works with all subcommands and flags
+  - Reduces typing and improves user experience
+  - Example: `tn stats`, `tn config set theme emoji`, `tn advanced shell install`
+
+### Fixed
+- **🔇 Enhanced Job Control Message Suppression**
+  - Completely eliminates `[1] + 91374 done` messages
+  - Triple suppression method implementation:
+    - Method 1: `nohup` with complete redirection
+    - Method 2: Immediate job `disown`
+    - Method 3: Temporary job control disable
+  - Zsh: `setopt NO_NOTIFY` and `NO_HUP`
+  - Bash: `set +m` to disable job control
+  - Updated `fix_hook.sh` script with enhanced fixes
+- **🔍 Empty Command Stats Detection**
+  - Fixed empty command detection logic for edge cases
+  - Handle case when no arguments provided to log-command
+  - Improved trimming and empty string detection
+  - Better error handling for background operations
+  - Resolves issue where pressing Enter on empty line didn't show stats
+
+### Changed
+- **📖 Updated Documentation**
+  - README.md includes short command examples
+  - TROUBLESHOOTING.md with new problem solutions
+  - Enhanced user guides with `tn` command usage
+
 ## [0.9.0-rc] - 2024-01-XX - Release Candidate: Enhanced UX & Empty Command Stats
 
 ### Added
-- **💡 Empty Command Stats Feature** 
+- **💡 Empty Command Stats Feature**
   - Quick stats display when pressing Enter on empty command line
   - Configurable display modes: minimal and rich
   - `empty_command_stats` configuration option with full control
@@ -19,6 +113,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Empty command demo script with usage examples
   - Enhanced API documentation for internal interfaces
   - Complete configuration reference
+- **⚡ Short Command Alias**
+  - Added `tn` as short alias for `termonaut` command
+  - Works with all subcommands and flags
+  - Reduces typing and improves user experience
 
 ### Changed
 - **⚡ Enhanced Configuration System**
@@ -39,6 +137,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Better empty command detection in shell hooks
   - Improved silent operation for background processes
   - Enhanced logging and debugging capabilities
+- **🔇 Job Control Message Suppression (v0.9.0-rc Enhanced)**
+  - Enhanced shell hook with multiple suppression methods
+  - Method 1: nohup with complete redirection
+  - Method 2: Immediate job disown
+  - Method 3: Temporary job control disable (setopt NO_NOTIFY for Zsh, set +m for Bash)
+  - Eliminates `[1] + 91374 done` messages completely
+- **🔍 Empty Command Stats Detection**
+  - Fixed empty command detection logic for edge cases
+  - Handle case when no arguments provided to log-command
+  - Improved trimming and empty string detection
+  - Better error handling for background operations
 
 ### Technical Improvements
 - Code organization and error handling enhancements

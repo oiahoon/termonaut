@@ -97,7 +97,7 @@ This guide helps you resolve common issues with Termonaut installation, configur
    ```bash
    # For Zsh
    source ~/.zshrc
-   
+
    # For Bash
    source ~/.bashrc
    ```
@@ -108,7 +108,7 @@ This guide helps you resolve common issues with Termonaut installation, configur
    preexec() {
      /usr/local/bin/termonaut log-command "$1" &
    }
-   
+
    # For Bash - add to ~/.bashrc
    trap 'termonaut log-command "$BASH_COMMAND" &' DEBUG
    ```
@@ -125,23 +125,52 @@ This guide helps you resolve common issues with Termonaut installation, configur
 **Problem**: Seeing job control messages like `[1] 12345 done`
 
 **Solutions**:
-1. **Use Updated Hook** (if available):
+1. **Use Updated Hook** (v0.9.0 Stable):
    ```bash
-   termonaut advanced shell install --force  # Re-install with latest hook
+   tn advanced shell install --force  # Re-install with latest enhanced hook
    ```
 
-2. **Manual Fix for Zsh**:
+2. **Apply Enhanced Fix Script**:
    ```bash
-   # Add to ~/.zshrc
-   preexec() {
-     { nohup /usr/local/bin/termonaut log-command "$1" > /dev/null 2>&1 & } 2>/dev/null
+   ./fix_hook.sh  # Uses multiple suppression methods
+   ```
+
+3. **Manual Enhanced Fix for Zsh**:
+   ```bash
+   # Add to ~/.zshrc (v0.9.0 Stable)
+   termonaut_preexec() {
+       {
+           # Method 1: Use nohup with complete redirection
+           nohup /usr/local/bin/termonaut log-command "$1" >/dev/null 2>&1 &
+
+           # Method 2: Disown the job immediately
+           disown %% 2>/dev/null || true
+
+           # Method 3: Disable job control temporarily
+           setopt NO_NOTIFY 2>/dev/null || true
+           setopt NO_HUP 2>/dev/null || true
+       } 2>/dev/null
    }
    ```
 
-3. **Manual Fix for Bash**:
+4. **Manual Enhanced Fix for Bash**:
    ```bash
-   # Add to ~/.bashrc
-   trap '{ nohup termonaut log-command "$BASH_COMMAND" > /dev/null 2>&1 & } 2>/dev/null' DEBUG
+   # Add to ~/.bashrc (v0.9.0 Stable)
+   termonaut_log_command() {
+       if [ -n "$BASH_COMMAND" ]; then
+           {
+               # Method 1: Use nohup with complete redirection
+               nohup termonaut log-command "$BASH_COMMAND" >/dev/null 2>&1 &
+
+               # Method 2: Disown the job immediately
+               disown $! 2>/dev/null || true
+
+               # Method 3: Disable job control temporarily
+               set +m 2>/dev/null || true
+           } 2>/dev/null
+       fi
+   }
+   trap 'termonaut_log_command' DEBUG
    ```
 
 ### Commands Not Being Categorized
@@ -151,12 +180,68 @@ This guide helps you resolve common issues with Termonaut installation, configur
 **Solutions**:
 1. **Enable Command Categories**:
    ```bash
-   termonaut config set command_categories true
+   tn config set command_categories true
    ```
 
 2. **Check Configuration**:
    ```bash
-   termonaut config get command_categories
+   tn config get command_categories
+   ```
+
+### Short Command Alias Not Working
+
+**Problem**: `tn` command not recognized
+
+**Solutions**:
+1. **Check Termonaut Version**:
+   ```bash
+   termonaut --version  # Should be v0.9.0 or later
+   ```
+
+2. **Verify Alias Support**:
+   ```bash
+   termonaut --help | grep -i alias
+   ```
+
+3. **Use Full Command Temporarily**:
+   ```bash
+   termonaut stats  # Instead of tn stats
+   ```
+
+### Empty Command Stats Not Working
+
+**Problem**: Pressing Enter on empty command line doesn't show stats
+
+**Solutions**:
+1. **Check Feature Status**:
+   ```bash
+   tn config get empty_command_stats
+   ```
+
+2. **Enable the Feature**:
+   ```bash
+   tn config set empty_command_stats true
+   ```
+
+3. **Check Display Mode**:
+   ```bash
+   tn config get display_mode
+   # Should NOT be "off"
+   ```
+
+4. **Test Manually**:
+   ```bash
+   tn log-command ""  # Should show stats
+   ```
+
+5. **Verify Shell Integration**:
+   ```bash
+   tn advanced shell status
+   ```
+
+6. **Check Theme Settings**:
+   ```bash
+   tn config get theme  # minimal, emoji, or ascii
    ```
 
 ## ⚡ Performance Issues
@@ -180,7 +265,7 @@ This guide helps you resolve common issues with Termonaut installation, configur
    ```bash
    # Export data first
    termonaut export backup.json
-   
+
    # Clean old data (keep last 30 days)
    sqlite3 ~/.termonaut/termonaut.db "DELETE FROM commands WHERE timestamp < datetime('now', '-30 days');"
    ```
@@ -221,16 +306,16 @@ This guide helps you resolve common issues with Termonaut installation, configur
    ```bash
    # Backup existing data
    cp ~/.termonaut/termonaut.db ~/.termonaut/termonaut.db.backup
-   
+
    # Try to export data
    termonaut export recovery.json
-   
+
    # Remove corrupted database
    rm ~/.termonaut/termonaut.db
-   
+
    # Restart termonaut (will create new database)
    termonaut stats
-   
+
    # Import backup if successful
    termonaut import recovery.json
    ```
@@ -488,4 +573,4 @@ If all checks pass and you're still having issues, try:
 1. Restart your terminal completely
 2. Run `termonaut advanced shell install --force` to reinstall hooks
 3. Enable debug logging and check for errors
-4. Report the issue with debug information 
+4. Report the issue with debug information

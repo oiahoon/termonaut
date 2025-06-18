@@ -73,27 +73,22 @@ echo "🎯 Using Termonaut binary: $termonaut_path"
 
 # Add new silent hook
 if [[ "$current_shell" == "zsh" ]]; then
-    # Add Zsh hook with enhanced job control suppression (v0.9.0 RC)
+    # Add Zsh hook with enhanced job control suppression (v0.9.0 Stable)
     cat >> "$config_file" << EOF
 
-# Termonaut shell integration (v0.9.0 RC - Enhanced)
+# Termonaut shell integration (v0.9.0 Stable)
 termonaut_preexec() {
-    # Silent background execution with comprehensive job control suppression
+    # Enhanced silent background execution - completely suppress job notifications
     {
-        # Create a completely detached subshell
-        (
-            # Disable all job control and output
-            set +m 2>/dev/null
-            unset HISTFILE 2>/dev/null
-            exec </dev/null >/dev/null 2>&1
-            
-            # Run termonaut in completely isolated environment
-            $termonaut_path log-command "\$1" &
-            
-            # Force exit to prevent any shell interaction
-            exit 0
-        ) &
+        # Method 1: Use nohup with complete redirection
+        nohup $termonaut_path log-command "\$1" >/dev/null 2>&1 &
+
+        # Method 2: Disown the job immediately
         disown %% 2>/dev/null || true
+
+        # Method 3: Disable job control temporarily
+        setopt NO_NOTIFY 2>/dev/null || true
+        setopt NO_HUP 2>/dev/null || true
     } 2>/dev/null
 }
 
@@ -108,28 +103,22 @@ if [[ ! " \${preexec_functions[@]} " =~ " termonaut_preexec " ]]; then
 fi
 EOF
 else
-    # Add Bash hook with enhanced job control suppression (v0.9.0 RC)
+    # Add Bash hook with enhanced job control suppression (v0.9.0 Stable)
     cat >> "$config_file" << EOF
 
-# Termonaut shell integration (v0.9.0 RC - Enhanced)
+# Termonaut shell integration (v0.9.0 Stable)
 termonaut_log_command() {
     if [ -n "\$BASH_COMMAND" ]; then
-        # Silent background execution with comprehensive job control suppression
+        # Enhanced silent background execution - completely suppress job notifications
         {
-            # Create a completely detached subshell
-            (
-                # Disable all job control and output
-                set +m 2>/dev/null
-                unset HISTFILE 2>/dev/null
-                exec </dev/null >/dev/null 2>&1
-                
-                # Run termonaut in completely isolated environment
-                $termonaut_path log-command "\$BASH_COMMAND" &
-                
-                # Force exit to prevent any shell interaction
-                exit 0
-            ) &
+            # Method 1: Use nohup with complete redirection
+            nohup $termonaut_path log-command "\$BASH_COMMAND" >/dev/null 2>&1 &
+
+            # Method 2: Disown the job immediately
             disown \$! 2>/dev/null || true
+
+            # Method 3: Disable job control temporarily
+            set +m 2>/dev/null || true
         } 2>/dev/null
     fi
 }

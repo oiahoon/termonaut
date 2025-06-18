@@ -1,18 +1,22 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/spf13/cobra"
-	"github.com/sirupsen/logrus"
 	"github.com/oiahoon/termonaut/internal/api"
 	"github.com/oiahoon/termonaut/internal/categories"
 	"github.com/oiahoon/termonaut/internal/config"
 	"github.com/oiahoon/termonaut/internal/database"
+	"github.com/oiahoon/termonaut/internal/github"
 	"github.com/oiahoon/termonaut/internal/shell"
 	"github.com/oiahoon/termonaut/internal/stats"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 )
 
 // initAdvancedDB initializes the database for advanced commands
@@ -44,7 +48,7 @@ func createAdvancedCmd() *cobra.Command {
 
 Includes:
 • Custom command scoring and filtering
-• Bulk operations on command data  
+• Bulk operations on command data
 • Shell integration management
 • API server for external integrations
 • Advanced analytics and insights`,
@@ -127,7 +131,7 @@ func createScoringCmd() *cobra.Command {
 			// Interactive creation (simplified for now)
 			fmt.Println("🎯 Create Custom Scoring Rule")
 			fmt.Println("===============================")
-			
+
 			var name string
 			fmt.Print("Rule name: ")
 			fmt.Scanln(&name)
@@ -219,7 +223,7 @@ func createFilterCmd() *cobra.Command {
 			if len(categoryStrings) > 0 {
 				classifier := categories.NewCommandClassifier()
 				allCategories := classifier.GetAllCategories()
-				
+
 				for _, catStr := range categoryStrings {
 					for cat := range allCategories {
 						if strings.EqualFold(string(cat), catStr) {
@@ -235,7 +239,7 @@ func createFilterCmd() *cobra.Command {
 			if err != nil {
 				fmt.Printf("⚠️ Advanced filtering not yet implemented: %v\n", err)
 				fmt.Println("📝 Using basic recent commands instead...")
-				
+
 				// Fallback to basic command retrieval
 				commands, err = db.GetRecentCommands(limit)
 				if err != nil {
@@ -253,7 +257,7 @@ func createFilterCmd() *cobra.Command {
 				if i >= limit {
 					break
 				}
-				
+
 				status := "✅"
 				if cmd.ExitCode != 0 {
 					status = "❌"
@@ -263,8 +267,8 @@ func createFilterCmd() *cobra.Command {
 				category := classifier.ClassifyCommand(cmd.Command)
 				categoryInfo := classifier.GetCategoryInfo(category)
 
-				fmt.Printf("%s [%s] %s %s\n", 
-					status, 
+				fmt.Printf("%s [%s] %s %s\n",
+					status,
 					cmd.Timestamp.Format("15:04:05"),
 					categoryInfo.Icon,
 					cmd.Command)
@@ -355,28 +359,32 @@ func createShellCmd() *cobra.Command {
 		Use:   "status",
 		Short: "📊 Show shell integration status",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			installer, err := shell.NewHookInstaller("")
+			binaryPath, err := shell.GetBinaryPath()
+			if err != nil {
+				return fmt.Errorf("failed to get binary path: %w", err)
+			}
+
+			installer, err := shell.NewHookInstaller(binaryPath)
 			if err != nil {
 				return fmt.Errorf("failed to create installer: %w", err)
 			}
 
-			shellType := installer.GetShellType()
 			installed, err := installer.IsInstalled()
 			if err != nil {
-				return fmt.Errorf("failed to check installation: %w", err)
+				return fmt.Errorf("failed to check installation status: %w", err)
 			}
 
 			fmt.Printf("🐚 Shell Integration Status\n")
 			fmt.Printf("===========================\n\n")
-			fmt.Printf("Current Shell: %s\n", shellType)
-			
+			fmt.Printf("Current Shell: %s\n", installer.GetShellType())
+
 			if installed {
-				fmt.Printf("Status: ✅ Installed\n")
+				fmt.Printf("Status: ✅ Installed\n\n")
 			} else {
-				fmt.Printf("Status: ❌ Not Installed\n")
+				fmt.Printf("Status: ❌ Not Installed\n\n")
 			}
 
-			fmt.Printf("\nSupported Shells:\n")
+			fmt.Printf("Supported Shells:\n")
 			fmt.Printf("  ✅ Zsh (Z Shell)\n")
 			fmt.Printf("  ✅ Bash\n")
 			fmt.Printf("  ✅ Fish\n")
@@ -394,7 +402,12 @@ func createShellCmd() *cobra.Command {
 		Use:   "install",
 		Short: "⚡ Install shell integration",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			installer, err := shell.NewHookInstaller("")
+			binaryPath, err := shell.GetBinaryPath()
+			if err != nil {
+				return fmt.Errorf("failed to get binary path: %w", err)
+			}
+
+			installer, err := shell.NewHookInstaller(binaryPath)
 			if err != nil {
 				return fmt.Errorf("failed to create installer: %w", err)
 			}
@@ -402,13 +415,14 @@ func createShellCmd() *cobra.Command {
 			shellType := installer.GetShellType()
 			fmt.Printf("🐚 Installing %s shell integration...\n", shellType)
 
-			if err := installer.Install(); err != nil {
+			force, _ := cmd.Flags().GetBool("force")
+			if err := installer.InstallWithForce(force); err != nil {
 				return fmt.Errorf("failed to install shell hook: %w", err)
 			}
 
 			fmt.Printf("✅ Successfully installed %s integration!\n", shellType)
 			fmt.Printf("\nRestart your terminal or run:\n")
-			
+
 			switch shellType {
 			case "zsh":
 				fmt.Printf("  source ~/.zshrc\n")
@@ -423,12 +437,18 @@ func createShellCmd() *cobra.Command {
 			return nil
 		},
 	}
+	installCmd.Flags().Bool("force", false, "Force reinstall even if already installed")
 
 	updateCmd := &cobra.Command{
 		Use:   "update",
 		Short: "🔄 Update shell integration",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			installer, err := shell.NewHookInstaller("")
+			binaryPath, err := shell.GetBinaryPath()
+			if err != nil {
+				return fmt.Errorf("failed to get binary path: %w", err)
+			}
+
+			installer, err := shell.NewHookInstaller(binaryPath)
 			if err != nil {
 				return fmt.Errorf("failed to create installer: %w", err)
 			}
@@ -450,9 +470,100 @@ func createShellCmd() *cobra.Command {
 		},
 	}
 
+	uninstallCmd := &cobra.Command{
+		Use:   "uninstall",
+		Short: "🗑️ Uninstall shell integration",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			binaryPath, err := shell.GetBinaryPath()
+			if err != nil {
+				return fmt.Errorf("failed to get binary path: %w", err)
+			}
+
+			installer, err := shell.NewHookInstaller(binaryPath)
+			if err != nil {
+				return fmt.Errorf("failed to create installer: %w", err)
+			}
+
+			shellType := installer.GetShellType()
+			fmt.Printf("🗑️ Uninstalling %s shell integration...\n", shellType)
+
+			if err := installer.Uninstall(); err != nil {
+				return fmt.Errorf("failed to uninstall shell hook: %w", err)
+			}
+
+			fmt.Printf("✅ Successfully uninstalled %s integration!\n", shellType)
+			fmt.Printf("\nRestart your terminal or run:\n")
+
+			switch shellType {
+			case "zsh":
+				fmt.Printf("  source ~/.zshrc\n")
+			case "bash":
+				fmt.Printf("  source ~/.bashrc\n")
+			case "fish":
+				fmt.Printf("  source ~/.config/fish/config.fish\n")
+			case "powershell":
+				fmt.Printf("  . $PROFILE\n")
+			}
+
+			return nil
+		},
+	}
+
+	completionCmd := &cobra.Command{
+		Use:   "completion [bash|zsh|fish|powershell]",
+		Short: "🔧 Generate shell completion scripts",
+		Long: `Generate shell completion scripts for termonaut commands.
+
+This will automatically install completion for the current shell, making it easier
+to use termonaut commands with tab completion.
+
+Examples:
+  termonaut advanced shell completion          # Auto-detect and install for current shell
+  termonaut advanced shell completion bash     # Generate bash completion
+  termonaut advanced shell completion zsh      # Generate zsh completion
+  termonaut advanced shell completion fish     # Generate fish completion`,
+		Args: cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			var targetShell string
+
+			if len(args) == 0 {
+				// Auto-detect current shell
+				binaryPath, err := shell.GetBinaryPath()
+				if err != nil {
+					return fmt.Errorf("failed to get binary path: %w", err)
+				}
+
+				installer, err := shell.NewHookInstaller(binaryPath)
+				if err != nil {
+					return fmt.Errorf("failed to detect shell: %w", err)
+				}
+				targetShell = string(installer.GetShellType())
+			} else {
+				targetShell = args[0]
+			}
+
+			fmt.Printf("🔧 Setting up shell completion for %s...\n\n", targetShell)
+
+			switch targetShell {
+			case "bash":
+				return setupBashCompletion()
+			case "zsh":
+				return setupZshCompletion()
+			case "fish":
+				return setupFishCompletion()
+			case "powershell":
+				return setupPowerShellCompletion()
+			default:
+				return fmt.Errorf("unsupported shell: %s. Supported: bash, zsh, fish, powershell", targetShell)
+			}
+		},
+	}
+
 	cmd.AddCommand(statusCmd)
 	cmd.AddCommand(installCmd)
 	cmd.AddCommand(updateCmd)
+	cmd.AddCommand(uninstallCmd)
+	cmd.AddCommand(completionCmd)
 	return cmd
 }
 
@@ -478,7 +589,7 @@ func createAPICmd() *cobra.Command {
 			defer db.Close()
 
 			server := api.NewAPIServer(db, port)
-			
+
 			fmt.Printf("🚀 Starting Termonaut API Server\n")
 			fmt.Printf("Port: %d\n", port)
 			fmt.Printf("CORS: %v\n", enableCORS)
@@ -567,9 +678,9 @@ func createAnalyticsCmd() *cobra.Command {
 
 			fmt.Printf("📈 Overview:\n")
 			fmt.Printf("  Total Commands Analyzed: %d\n", analytics.TotalCommands)
-			
+
 			if analytics.TimeRange != nil {
-				fmt.Printf("  Time Range: %s to %s\n", 
+				fmt.Printf("  Time Range: %s to %s\n",
 					analytics.TimeRange.Start.Format("2006-01-02"),
 					analytics.TimeRange.End.Format("2006-01-02"))
 				fmt.Printf("  Analysis Period: %v\n", analytics.TimeRange.Duration)
@@ -592,4 +703,300 @@ func createAnalyticsCmd() *cobra.Command {
 
 	cmd.AddCommand(insightsCmd)
 	return cmd
-} 
+}
+
+// setupBashCompletion sets up bash completion
+func setupBashCompletion() error {
+	fmt.Println("📝 Bash Completion Setup")
+	fmt.Println("========================")
+	fmt.Println()
+
+	fmt.Println("1. Generate completion script:")
+	fmt.Println("   termonaut completion bash > /usr/local/etc/bash_completion.d/termonaut")
+	fmt.Println()
+
+	fmt.Println("2. Or add to your ~/.bashrc:")
+	fmt.Println("   source <(termonaut completion bash)")
+	fmt.Println()
+
+	fmt.Println("3. Reload your shell:")
+	fmt.Println("   source ~/.bashrc")
+	fmt.Println()
+
+	fmt.Println("✅ After setup, you can use tab completion with termonaut commands!")
+	return nil
+}
+
+// setupZshCompletion sets up zsh completion
+func setupZshCompletion() error {
+	fmt.Println("📝 Zsh Completion Setup")
+	fmt.Println("=======================")
+	fmt.Println()
+
+	fmt.Println("1. Generate completion script:")
+	fmt.Println("   termonaut completion zsh > \"${fpath[1]}/_termonaut\"")
+	fmt.Println()
+
+	fmt.Println("2. Or add to your ~/.zshrc:")
+	fmt.Println("   source <(termonaut completion zsh)")
+	fmt.Println()
+
+	fmt.Println("3. For Oh My Zsh users:")
+	fmt.Println("   termonaut completion zsh > ~/.oh-my-zsh/completions/_termonaut")
+	fmt.Println()
+
+	fmt.Println("4. Reload your shell:")
+	fmt.Println("   source ~/.zshrc")
+	fmt.Println()
+
+	fmt.Println("✅ After setup, you can use tab completion with termonaut commands!")
+	return nil
+}
+
+// setupFishCompletion sets up fish completion
+func setupFishCompletion() error {
+	fmt.Println("📝 Fish Completion Setup")
+	fmt.Println("========================")
+	fmt.Println()
+
+	fmt.Println("1. Generate completion script:")
+	fmt.Println("   termonaut completion fish > ~/.config/fish/completions/termonaut.fish")
+	fmt.Println()
+
+	fmt.Println("2. Reload fish:")
+	fmt.Println("   source ~/.config/fish/config.fish")
+	fmt.Println()
+
+	fmt.Println("✅ After setup, you can use tab completion with termonaut commands!")
+	return nil
+}
+
+// setupPowerShellCompletion sets up PowerShell completion
+func setupPowerShellCompletion() error {
+	fmt.Println("📝 PowerShell Completion Setup")
+	fmt.Println("==============================")
+	fmt.Println()
+
+	fmt.Println("1. Add to your PowerShell profile:")
+	fmt.Println("   termonaut completion powershell | Out-String | Invoke-Expression")
+	fmt.Println()
+
+	fmt.Println("2. Or save to a file and source it:")
+	fmt.Println("   termonaut completion powershell > termonaut.ps1")
+	fmt.Println("   . ./termonaut.ps1")
+	fmt.Println()
+
+	fmt.Println("3. Reload PowerShell:")
+	fmt.Println("   . $PROFILE")
+	fmt.Println()
+
+	fmt.Println("✅ After setup, you can use tab completion with termonaut commands!")
+	return nil
+}
+
+func runGitHubSyncNowCommand(cmd *cobra.Command, args []string) error {
+	// Load configuration
+	cfg, err := config.Load()
+	if err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	if !cfg.SyncEnabled {
+		fmt.Println("❌ GitHub sync is disabled")
+		fmt.Println("Enable it with: tn config set sync_enabled true")
+		return nil
+	}
+
+	if cfg.SyncRepo == "" {
+		fmt.Println("❌ No sync repository configured")
+		fmt.Println("Set it with: tn config set sync_repo username/repository")
+		return nil
+	}
+
+	fmt.Printf("🚀 Syncing to %s...\n", cfg.SyncRepo)
+	fmt.Println("✅ Sync feature coming soon!")
+	fmt.Println("📋 For now, use the GitHub commands:")
+	fmt.Println("• tn github badges generate")
+	fmt.Println("• tn github profile generate")
+	fmt.Println("• tn github actions generate termonaut-stats-update")
+
+	return nil
+}
+
+func runGitHubSyncStatusCommand(cmd *cobra.Command, args []string) error {
+	// Load configuration
+	cfg, err := config.Load()
+	if err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	fmt.Println("📊 GitHub Sync Status")
+	fmt.Println("──────────────────────")
+
+	if cfg.SyncEnabled {
+		fmt.Println("✅ Sync: Enabled")
+	} else {
+		fmt.Println("❌ Sync: Disabled")
+	}
+
+	if cfg.SyncRepo != "" {
+		fmt.Printf("📁 Repository: %s\n", cfg.SyncRepo)
+	} else {
+		fmt.Println("📁 Repository: Not configured")
+	}
+
+	fmt.Printf("⏰ Frequency: %s\n", cfg.BadgeUpdateFrequency)
+
+	// Check last sync
+	lastSyncFile := filepath.Join(config.GetDataDir(cfg), "last_sync.json")
+	if data, err := os.ReadFile(lastSyncFile); err == nil {
+		var lastSync github.SyncResult
+		if json.Unmarshal(data, &lastSync) == nil {
+			fmt.Printf("🕐 Last sync: %s\n", lastSync.Timestamp.Format("2006-01-02 15:04:05"))
+			if lastSync.Success {
+				fmt.Printf("✅ Status: Success (%d files, %s)\n", len(lastSync.FilesUpdated), lastSync.SyncDuration)
+			} else {
+				fmt.Printf("❌ Status: Failed (%s)\n", lastSync.ErrorMessage)
+			}
+		}
+	} else {
+		fmt.Println("🕐 Last sync: Never")
+	}
+
+	// Show setup instructions if not configured
+	if !cfg.SyncEnabled || cfg.SyncRepo == "" {
+		fmt.Println()
+		fmt.Println("🔧 Setup Instructions:")
+		if !cfg.SyncEnabled {
+			fmt.Println("1. Enable sync: tn config set sync_enabled true")
+		}
+		if cfg.SyncRepo == "" {
+			fmt.Println("2. Set repository: tn config set sync_repo username/repository")
+		}
+		fmt.Println("3. Run setup: tn github sync setup")
+		fmt.Println("4. Test sync: tn github sync now")
+	}
+
+	return nil
+}
+
+func runGitHubSyncSetupCommand(cmd *cobra.Command, args []string) error {
+	fmt.Println("🔧 GitHub Sync Setup")
+	fmt.Println("═══════════════════")
+	fmt.Println()
+
+	// Load current configuration
+	cfg, err := config.Load()
+	if err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	// Interactive setup
+	fmt.Println("This will help you set up GitHub synchronization for your Termonaut data.")
+	fmt.Println()
+
+	// Step 1: Enable sync
+	if !cfg.SyncEnabled {
+		fmt.Println("1️⃣  Enabling GitHub sync...")
+		cfg.SyncEnabled = true
+		fmt.Println("✅ GitHub sync enabled")
+	} else {
+		fmt.Println("1️⃣  GitHub sync is already enabled")
+	}
+
+	// Step 2: Repository configuration
+	fmt.Println()
+	fmt.Println("2️⃣  Repository Configuration")
+	if cfg.SyncRepo == "" {
+		fmt.Print("Enter your GitHub repository (username/repository): ")
+		var repo string
+		fmt.Scanln(&repo)
+		if repo != "" {
+			cfg.SyncRepo = repo
+			fmt.Printf("✅ Repository set to: %s\n", repo)
+		}
+	} else {
+		fmt.Printf("Current repository: %s\n", cfg.SyncRepo)
+		fmt.Print("Change repository? (y/N): ")
+		var change string
+		fmt.Scanln(&change)
+		if strings.ToLower(change) == "y" {
+			fmt.Print("Enter new repository (username/repository): ")
+			var repo string
+			fmt.Scanln(&repo)
+			if repo != "" {
+				cfg.SyncRepo = repo
+				fmt.Printf("✅ Repository updated to: %s\n", repo)
+			}
+		}
+	}
+
+	// Step 3: Frequency configuration
+	fmt.Println()
+	fmt.Println("3️⃣  Sync Frequency")
+	fmt.Printf("Current frequency: %s\n", cfg.BadgeUpdateFrequency)
+	fmt.Println("Available options: hourly, daily, weekly")
+	fmt.Print("Change frequency? (y/N): ")
+	var changeFreq string
+	fmt.Scanln(&changeFreq)
+	if strings.ToLower(changeFreq) == "y" {
+		fmt.Print("Enter frequency (hourly/daily/weekly): ")
+		var freq string
+		fmt.Scanln(&freq)
+		if freq == "hourly" || freq == "daily" || freq == "weekly" {
+			cfg.BadgeUpdateFrequency = freq
+			fmt.Printf("✅ Frequency set to: %s\n", freq)
+		}
+	}
+
+	// Save configuration
+	if err := config.Save(cfg); err != nil {
+		return fmt.Errorf("failed to save config: %w", err)
+	}
+
+	fmt.Println()
+	fmt.Println("4️⃣  GitHub Actions Setup (Optional)")
+	fmt.Println("To automate updates, you can set up GitHub Actions:")
+	fmt.Println()
+	fmt.Printf("1. Generate workflow: tn github actions generate termonaut-stats-update\n")
+	fmt.Printf("2. Commit to your repository: %s\n", cfg.SyncRepo)
+	fmt.Printf("3. The workflow will update badges every 6 hours\n")
+	fmt.Println()
+
+	fmt.Println("5️⃣  Test Your Setup")
+	fmt.Println("Run a test sync to verify everything works:")
+	fmt.Println("tn github sync now")
+	fmt.Println()
+
+	fmt.Println("✅ Setup complete!")
+	fmt.Println()
+	fmt.Println("📋 Next Steps:")
+	fmt.Println("• Test sync: tn github sync now")
+	fmt.Println("• Check status: tn github sync status")
+	fmt.Println("• Set up automation: tn github actions generate termonaut-stats-update")
+
+	return nil
+}
+
+func runGitHubActionsTriggerCommand(cmd *cobra.Command, args []string) error {
+	workflowName := args[0]
+
+	// Load configuration
+	cfg, err := config.Load()
+	if err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	if cfg.SyncRepo == "" {
+		fmt.Println("❌ No sync repository configured")
+		fmt.Println("Set it with: tn config set sync_repo username/repository")
+		return nil
+	}
+
+	fmt.Printf("🚀 Triggering workflow '%s' in %s...\n", workflowName, cfg.SyncRepo)
+	fmt.Println("✅ GitHub Actions trigger feature coming soon!")
+	fmt.Println("📋 For now, manually trigger workflows in GitHub:")
+	fmt.Printf("🔗 https://github.com/%s/actions\n", cfg.SyncRepo)
+
+	return nil
+}

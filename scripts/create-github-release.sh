@@ -13,7 +13,7 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 # Configuration
-VERSION="0.9.0-rc"
+VERSION="0.9.0"
 RELEASE_TITLE="Termonaut v${VERSION} - Release Candidate: Enhanced UX & Empty Command Stats"
 REPO_OWNER="oiahoon"
 REPO_NAME="termonaut"
@@ -95,4 +95,4 @@ echo -e "2. Announce RC to community for feedback"
 echo -e "3. Collect feedback and iterate"
 echo -e "4. Prepare for v1.0.0 stable release"
 echo
-echo -e "${BLUE}🔗 Release URL: https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/tag/${VERSION}${NC}" 
+echo -e "${BLUE}🔗 Release URL: https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/tag/${VERSION}${NC}"

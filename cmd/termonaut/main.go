@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/oiahoon/termonaut/internal/avatar"
 	"github.com/oiahoon/termonaut/internal/config"
 	"github.com/oiahoon/termonaut/internal/database"
 	"github.com/oiahoon/termonaut/internal/gamification"
@@ -17,6 +18,7 @@ import (
 	"github.com/oiahoon/termonaut/pkg/models"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
 )
 
 var (
@@ -185,22 +187,22 @@ func init() {
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(promptCmd)
 
-	// Add gamification commands
-	rootCmd.AddCommand(progressCmd)
-	rootCmd.AddCommand(achievementsCmd)
-	rootCmd.AddCommand(levelCmd)
+	// Add gamification commands (temporarily commented out)
+	// rootCmd.AddCommand(progressCmd)
+	// rootCmd.AddCommand(achievementsCmd)
+	// rootCmd.AddCommand(levelCmd)
 
-	// Add category analysis command
-	rootCmd.AddCommand(categoriesCmd)
+	// Add category analysis command (temporarily commented out)
+	// rootCmd.AddCommand(categoriesCmd)
 
-	// Add productivity analytics command
-	rootCmd.AddCommand(analyticsCmd)
+	// Add productivity analytics command (temporarily commented out)
+	// rootCmd.AddCommand(analyticsCmd)
 
-	// Add advanced features
-	rootCmd.AddCommand(heatmapCmd)
-	rootCmd.AddCommand(dashboardCmd)
-	rootCmd.AddCommand(tuiCmd)
-	rootCmd.AddCommand(createAdvancedCmd())
+	// Add advanced features (temporarily commented out)
+	// rootCmd.AddCommand(heatmapCmd)
+	// rootCmd.AddCommand(dashboardCmd)
+	// rootCmd.AddCommand(tuiCmd)
+	// rootCmd.AddCommand(createAdvancedCmd())
 	rootCmd.AddCommand(createGitHubCmd())
 
 	// Add completion command
@@ -273,23 +275,23 @@ PowerShell:
 	initCmd.Flags().Bool("force", false, "Force reinstall even if already installed")
 	initCmd.Flags().String("shell", "", "Specify shell type (zsh, bash)")
 
-	// Gamification command flags
-	progressCmd.Flags().BoolP("json", "j", false, "Output in JSON format")
-	achievementsCmd.Flags().Bool("all", false, "Show all achievements including locked ones")
-	achievementsCmd.Flags().BoolP("json", "j", false, "Output in JSON format")
-	levelCmd.Flags().BoolP("json", "j", false, "Output in JSON format")
+	// Gamification command flags (temporarily commented out)
+	// progressCmd.Flags().BoolP("json", "j", false, "Output in JSON format")
+	// achievementsCmd.Flags().Bool("all", false, "Show all achievements including locked ones")
+	// achievementsCmd.Flags().BoolP("json", "j", false, "Output in JSON format")
+	// levelCmd.Flags().BoolP("json", "j", false, "Output in JSON format")
 
-	// Category command flags
-	categoriesCmd.Flags().BoolP("json", "j", false, "Output in JSON format")
+	// Category command flags (temporarily commented out)
+	// categoriesCmd.Flags().BoolP("json", "j", false, "Output in JSON format")
 
-	// Analytics command flags
-	analyticsCmd.Flags().BoolP("json", "j", false, "Output in JSON format")
+	// Analytics command flags (temporarily commented out)
+	// analyticsCmd.Flags().BoolP("json", "j", false, "Output in JSON format")
 
-	// Heatmap command flags
-	heatmapCmd.Flags().BoolP("json", "j", false, "Output in JSON format")
+	// Heatmap command flags (temporarily commented out)
+	// heatmapCmd.Flags().BoolP("json", "j", false, "Output in JSON format")
 
-	// Dashboard command flags
-	dashboardCmd.Flags().BoolP("json", "j", false, "Output in JSON format")
+	// Dashboard command flags (temporarily commented out)
+	// dashboardCmd.Flags().BoolP("json", "j", false, "Output in JSON format")
 }
 
 func runStatsCommand(cmd *cobra.Command, args []string) error {
@@ -338,10 +340,20 @@ func runStatsCommand(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to get stats: %w", err)
 	}
 
+	// Get user progress for avatar display
+	userProgress, err := db.GetUserProgress()
+	if err != nil {
+		return fmt.Errorf("failed to get user progress: %w", err)
+	}
+
 	if jsonOutput {
 		fmt.Printf("%+v\n", basicStats)
 	} else {
-		fmt.Print(statsCalc.FormatBasicStats(basicStats))
+		// Try to display avatar with stats
+		if err := displayStatsWithAvatar(basicStats, userProgress); err != nil {
+			// Fallback to regular stats display if avatar fails
+			fmt.Print(statsCalc.FormatBasicStats(basicStats))
+		}
 	}
 
 	return nil
@@ -409,6 +421,11 @@ func runConfigGetCommand(cmd *cobra.Command, args []string) error {
 		fmt.Printf("Command Categories: %t\n", cfg.CommandCategories)
 		fmt.Printf("Easter Eggs Enabled: %t\n", cfg.EasterEggsEnabled)
 		fmt.Printf("Empty Command Stats: %t\n", cfg.EmptyCommandStats)
+		fmt.Printf("Avatar Enabled: %t\n", cfg.AvatarEnabled)
+		fmt.Printf("Avatar Style: %s\n", cfg.AvatarStyle)
+		fmt.Printf("Avatar Size: %s\n", cfg.AvatarSize)
+		fmt.Printf("Avatar Color Support: %s\n", cfg.AvatarColorSupport)
+		fmt.Printf("Avatar Cache TTL: %s\n", cfg.AvatarCacheTTL)
 		fmt.Printf("Sync Enabled: %t\n", cfg.SyncEnabled)
 		fmt.Printf("Anonymous Mode: %t\n", cfg.AnonymousMode)
 		fmt.Printf("Log Level: %s\n", cfg.LogLevel)
@@ -435,6 +452,16 @@ func runConfigGetCommand(cmd *cobra.Command, args []string) error {
 		fmt.Println(cfg.SyncRepo)
 	case "badge_update_frequency":
 		fmt.Println(cfg.BadgeUpdateFrequency)
+	case "avatar_enabled":
+		fmt.Printf("%t\n", cfg.AvatarEnabled)
+	case "avatar_style":
+		fmt.Println(cfg.AvatarStyle)
+	case "avatar_size":
+		fmt.Println(cfg.AvatarSize)
+	case "avatar_color_support":
+		fmt.Println(cfg.AvatarColorSupport)
+	case "avatar_cache_ttl":
+		fmt.Println(cfg.AvatarCacheTTL)
 	case "log_level":
 		fmt.Println(cfg.LogLevel)
 	default:
@@ -491,6 +518,28 @@ func runConfigSetCommand(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("invalid badge_update_frequency value. Must be: hourly, daily, weekly")
 		}
 		cfg.BadgeUpdateFrequency = value
+	case "avatar_enabled":
+		if value != "true" && value != "false" {
+			return fmt.Errorf("invalid boolean value. Must be: true, false")
+		}
+		cfg.AvatarEnabled = value == "true"
+	case "avatar_style":
+		if value != "pixel-art" && value != "bottts" && value != "adventurer" && value != "avataaars" {
+			return fmt.Errorf("invalid avatar_style value. Must be: pixel-art, bottts, adventurer, avataaars")
+		}
+		cfg.AvatarStyle = value
+	case "avatar_size":
+		if value != "mini" && value != "small" && value != "medium" && value != "large" {
+			return fmt.Errorf("invalid avatar_size value. Must be: mini, small, medium, large")
+		}
+		cfg.AvatarSize = value
+	case "avatar_color_support":
+		if value != "auto" && value != "enabled" && value != "disabled" {
+			return fmt.Errorf("invalid avatar_color_support value. Must be: auto, enabled, disabled")
+		}
+		cfg.AvatarColorSupport = value
+	case "avatar_cache_ttl":
+		cfg.AvatarCacheTTL = value
 	case "log_level":
 		if value != "debug" && value != "info" && value != "warn" && value != "error" {
 			return fmt.Errorf("invalid log_level value. Must be: debug, info, warn, error")
@@ -1276,4 +1325,322 @@ jobs:
         git diff --staged --quiet || git commit -m "📈 Weekly Termonaut report - $(date +'%Y-W%U')"
         git push
 `
+}
+
+// getTerminalSize returns the terminal width and height
+func getTerminalSize() (int, int) {
+	width, height, err := term.GetSize(int(os.Stdout.Fd()))
+	if err != nil {
+		// Fallback to common terminal size
+		return 80, 24
+	}
+	return width, height
+}
+
+// calculateOptimalAvatarSize determines the best avatar size based on terminal width
+func calculateOptimalAvatarSize(terminalWidth int) avatar.AvatarSize {
+	// Reserve space for stats (minimum 45 characters)
+	availableWidth := terminalWidth - 50
+
+	if availableWidth >= 60 {
+		return avatar.SizeLarge  // 60x30
+	} else if availableWidth >= 40 {
+		return avatar.SizeMedium // 40x20
+	} else if availableWidth >= 20 {
+		return avatar.SizeSmall  // 20x10
+	} else {
+		return avatar.SizeMini   // 10x5
+	}
+}
+
+// splitTextIntoColumns splits text to fit in specified column width
+func splitTextIntoColumns(text string, maxWidth int) []string {
+	if len(text) <= maxWidth {
+		return []string{text}
+	}
+
+	var lines []string
+	words := strings.Fields(text)
+	currentLine := ""
+
+	for _, word := range words {
+		if len(currentLine)+len(word)+1 <= maxWidth {
+			if currentLine == "" {
+				currentLine = word
+			} else {
+				currentLine += " " + word
+			}
+		} else {
+			if currentLine != "" {
+				lines = append(lines, currentLine)
+			}
+			currentLine = word
+		}
+	}
+
+	if currentLine != "" {
+		lines = append(lines, currentLine)
+	}
+
+	return lines
+}
+
+// removeANSIEscapeCodes removes ANSI color codes from a string for width calculation
+func removeANSIEscapeCodes(s string) string {
+	result := ""
+	inEscape := false
+	
+	for i, r := range s {
+		if r == '\033' && i+1 < len(s) && s[i+1] == '[' {
+			inEscape = true
+			continue
+		}
+		if inEscape {
+			if (r >= 'A' && r <= 'Z') || (r >= 'a' && r <= 'z') {
+				inEscape = false
+			}
+			continue
+		}
+		result += string(r)
+	}
+	
+	return result
+}
+
+// min returns the minimum of two integers
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+// max returns the maximum of two integers
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+// displayStatsWithAvatar displays user stats with avatar integration using side-by-side layout
+func displayStatsWithAvatar(basicStats *stats.BasicStats, userProgress *models.UserProgress) error {
+	// Get terminal size
+	terminalWidth, _ := getTerminalSize()
+	
+	// Get avatar manager
+	avatarManager, err := getAvatarManager()
+	if err != nil {
+		return fmt.Errorf("failed to initialize avatar manager: %w", err)
+	}
+
+	// Get current user stats
+	username, level, err := getCurrentUserStats()
+	if err != nil {
+		return fmt.Errorf("failed to get user stats: %w", err)
+	}
+
+	// Determine optimal avatar size based on terminal width
+	avatarSize := calculateOptimalAvatarSize(terminalWidth)
+
+	// Load configuration to get current style
+	cfg, err := config.Load()
+	if err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	// Create avatar request with enhanced parameters for better quality
+	request := avatar.AvatarRequest{
+		Username: username,
+		Level:    level,
+		Style:    cfg.AvatarStyle, // Use style from configuration
+		Size:     avatarSize,
+	}
+
+	// Generate avatar with enhanced quality settings
+	avatarObj, err := avatarManager.Generate(request)
+	if err != nil {
+		return fmt.Errorf("failed to generate avatar: %w", err)
+	}
+
+	// Display header
+	fmt.Printf("\n🎮 %s's Terminal Dashboard (Level %d)\n", username, level)
+	fmt.Printf("═══════════════════════════════════════════════════════════════════════════════\n\n")
+
+	// Split avatar into lines
+	avatarLines := strings.Split(strings.TrimSpace(avatarObj.ASCIIArt), "\n")
+	
+	// Calculate avatar width (from first line, removing ANSI codes)
+	avatarWidth := 0
+	if len(avatarLines) > 0 {
+		cleanLine := removeANSIEscapeCodes(avatarLines[0])
+		avatarWidth = len(cleanLine)
+	}
+
+	// Calculate stats column width
+	statsColumnWidth := terminalWidth - avatarWidth - 6 // 6 for spacing and separator
+
+	// Prepare detailed stats content
+	statsContent := []string{
+		fmt.Sprintf("📊 Total Commands: %d", basicStats.TotalCommands),
+		fmt.Sprintf("📅 Commands Today: %d", basicStats.CommandsToday),
+		fmt.Sprintf("⭐ Unique Commands: %d", basicStats.UniqueCommands),
+		fmt.Sprintf("📱 Terminal Sessions: %d", basicStats.TotalSessions),
+		fmt.Sprintf("👤 Level: %d (XP: %d)", userProgress.CurrentLevel, userProgress.TotalXP),
+		"",
+		"📈 Progress to Next Level:",
+		generateProgressBar(int(userProgress.TotalXP%1000), 1000, min(30, statsColumnWidth-5)),
+		"",
+	}
+
+	// Add most used command info
+	if basicStats.MostUsedCommand != "" {
+		statsContent = append(statsContent, 
+			fmt.Sprintf("👑 Most Used: %s (%d times)", 
+				truncateString(basicStats.MostUsedCommand, statsColumnWidth-20), 
+				basicStats.MostUsedCount))
+		statsContent = append(statsContent, "")
+	}
+
+	// Add achievements section
+	statsContent = append(statsContent, "🏆 Achievements:")
+	if basicStats.TotalCommands >= 100 {
+		statsContent = append(statsContent, "  ✅ Century Club - 100+ commands")
+	}
+	if basicStats.TotalCommands >= 1000 {
+		statsContent = append(statsContent, "  ✅ Command Master - 1000+ commands")
+	}
+	if basicStats.TotalSessions >= 50 {
+		statsContent = append(statsContent, "  ✅ Session Pro - 50+ sessions")
+	}
+	if basicStats.UniqueCommands >= 50 {
+		statsContent = append(statsContent, "  ✅ Tool Explorer - 50+ unique commands")
+	}
+
+	// Add productivity insights
+	statsContent = append(statsContent, "", "💡 Productivity Insights:")
+	if basicStats.TotalSessions > 0 {
+		avgCommandsPerSession := float64(basicStats.TotalCommands) / float64(basicStats.TotalSessions)
+		statsContent = append(statsContent, fmt.Sprintf("  • Avg commands/session: %.1f", avgCommandsPerSession))
+	}
+
+	// Add top commands if available
+	if len(basicStats.TopCommands) > 0 {
+		statsContent = append(statsContent, "", "🔥 Top Commands:")
+		for i, cmd := range basicStats.TopCommands {
+			if i >= 5 { // Limit to top 5
+				break
+			}
+			// Extract command and count from map
+			cmdStr := cmd["command"].(string)
+			count := cmd["count"].(int)
+			
+			// Create a simple bar visualization
+			maxBarLength := min(15, statsColumnWidth-25)
+			barLength := (count * maxBarLength) / max(1, basicStats.MostUsedCount)
+			if barLength < 1 {
+				barLength = 1
+			}
+			bar := strings.Repeat("█", barLength)
+			
+			statsContent = append(statsContent, 
+				fmt.Sprintf("  %-20s (%3d) %s", 
+					truncateString(cmdStr, 20), 
+					count, 
+					bar))
+		}
+	}
+
+	// Show next evolution info
+	nextEvolutionLevel := getNextEvolutionLevel(level)
+	if nextEvolutionLevel > 0 {
+		statsContent = append(statsContent, "", 
+			fmt.Sprintf("🚀 Next Avatar Evolution: Level %d", nextEvolutionLevel))
+	}
+
+	// Split long lines to fit in stats column
+	var formattedStats []string
+	for _, line := range statsContent {
+		if len(line) <= statsColumnWidth {
+			formattedStats = append(formattedStats, line)
+		} else {
+			splitLines := splitTextIntoColumns(line, statsColumnWidth)
+			formattedStats = append(formattedStats, splitLines...)
+		}
+	}
+
+	// Display side by side layout
+	maxLines := max(len(avatarLines), len(formattedStats))
+
+	for i := 0; i < maxLines; i++ {
+		// Avatar column (left)
+		if i < len(avatarLines) {
+			fmt.Printf("%s", avatarLines[i])
+			// Pad to avatar width if needed
+			actualWidth := len(removeANSIEscapeCodes(avatarLines[i]))
+			if actualWidth < avatarWidth {
+				fmt.Printf("%s", strings.Repeat(" ", avatarWidth-actualWidth))
+			}
+		} else {
+			fmt.Printf("%s", strings.Repeat(" ", avatarWidth))
+		}
+
+		// Separator
+		fmt.Printf("  │  ")
+
+		// Stats column (right)
+		if i < len(formattedStats) {
+			fmt.Printf("%s", formattedStats[i])
+		}
+		fmt.Println()
+	}
+
+	fmt.Printf("\n═══════════════════════════════════════════════════════════════════════════════\n")
+	fmt.Printf("💡 Tip: Use 'termonaut avatar config' to customize your avatar appearance\n")
+	fmt.Printf("🔧 Current avatar size: %s (auto-adjusted for terminal width: %d)\n", 
+		getSizeDisplayName(avatarSize), terminalWidth)
+
+	return nil
+}
+
+// getSizeDisplayName returns a human-readable name for avatar size
+func getSizeDisplayName(size avatar.AvatarSize) string {
+	switch size {
+	case avatar.SizeMini:
+		return "Mini (10x5)"
+	case avatar.SizeSmall:
+		return "Small (20x10)"
+	case avatar.SizeMedium:
+		return "Medium (40x20)"
+	case avatar.SizeLarge:
+		return "Large (60x30)"
+	default:
+		return "Unknown"
+	}
+}
+
+// generateProgressBar creates a visual progress bar
+func generateProgressBar(current, total, width int) string {
+	if width <= 0 {
+		return ""
+	}
+	
+	percentage := float64(current) / float64(total)
+	if percentage > 1.0 {
+		percentage = 1.0
+	}
+	
+	filled := int(float64(width) * percentage)
+	empty := width - filled
+	
+	bar := strings.Repeat("█", filled) + strings.Repeat("░", empty)
+	return fmt.Sprintf("%s %d/%d (%.1f%%)", bar, current, total, percentage*100)
+}
+
+// truncateString truncates a string to the specified length
+func truncateString(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen-3] + "..."
 }

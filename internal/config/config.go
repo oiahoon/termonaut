@@ -50,6 +50,13 @@ type Config struct {
 	// Quick Stats on Empty Command
 	EmptyCommandStats bool `mapstructure:"empty_command_stats"`
 
+	// Avatar System
+	AvatarEnabled      bool   `mapstructure:"avatar_enabled"`
+	AvatarStyle        string `mapstructure:"avatar_style"`
+	AvatarSize         string `mapstructure:"avatar_size"`
+	AvatarColorSupport string `mapstructure:"avatar_color_support"`
+	AvatarCacheTTL     string `mapstructure:"avatar_cache_ttl"`
+
 	// Internal
 	DataDir  string `mapstructure:"data_dir"`
 	LogLevel string `mapstructure:"log_level"`
@@ -89,6 +96,13 @@ func DefaultConfig() *Config {
 
 		// Quick Stats on Empty Command
 		EmptyCommandStats: true,
+
+		// Avatar System
+		AvatarEnabled:      true,
+		AvatarStyle:        "pixel-art",
+		AvatarSize:         "small",
+		AvatarColorSupport: "auto",
+		AvatarCacheTTL:     "7d",
 
 		// Internal
 		DataDir:  dataDir,
@@ -172,6 +186,11 @@ func Save(config *Config) error {
 	viper.Set("sanitize_file_paths", config.SanitizeFilePaths)
 	viper.Set("easter_eggs_enabled", config.EasterEggsEnabled)
 	viper.Set("empty_command_stats", config.EmptyCommandStats)
+	viper.Set("avatar_enabled", config.AvatarEnabled)
+	viper.Set("avatar_style", config.AvatarStyle)
+	viper.Set("avatar_size", config.AvatarSize)
+	viper.Set("avatar_color_support", config.AvatarColorSupport)
+	viper.Set("avatar_cache_ttl", config.AvatarCacheTTL)
 	viper.Set("data_dir", config.DataDir)
 	viper.Set("log_level", config.LogLevel)
 
@@ -206,6 +225,11 @@ func setDefaults() {
 	viper.SetDefault("sanitize_file_paths", true)
 	viper.SetDefault("easter_eggs_enabled", true)
 	viper.SetDefault("empty_command_stats", true)
+	viper.SetDefault("avatar_enabled", true)
+	viper.SetDefault("avatar_style", "pixel-art")
+	viper.SetDefault("avatar_size", "small")
+	viper.SetDefault("avatar_color_support", "auto")
+	viper.SetDefault("avatar_cache_ttl", "7d")
 	viper.SetDefault("data_dir", dataDir)
 	viper.SetDefault("log_level", "info")
 }

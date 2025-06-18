@@ -123,21 +123,16 @@ choose_install_dir() {
     # If user specified a directory, use it
     if [ -n "$CUSTOM_INSTALL_DIR" ]; then
         target_dir="$CUSTOM_INSTALL_DIR"
-        print_status "Using custom installation directory: $target_dir"
     # If running as root or /usr/local/bin is writable, use it
     elif is_root || is_writable "/usr/local/bin"; then
         target_dir="/usr/local/bin"
-        print_status "Using system installation directory: $target_dir"
     # Otherwise, use user directory
     else
         target_dir="$USER_INSTALL_DIR"
-        print_status "Using user installation directory: $target_dir"
-        print_warning "You may need to add $target_dir to your PATH"
     fi
 
     # Create directory if it doesn't exist
     if [ ! -d "$target_dir" ]; then
-        print_status "Creating directory: $target_dir"
         if ! mkdir -p "$target_dir" 2>/dev/null; then
             if [ "$target_dir" = "/usr/local/bin" ] && command -v sudo >/dev/null 2>&1; then
                 sudo mkdir -p "$target_dir"
@@ -163,9 +158,11 @@ install_termonaut() {
         binary_name="termonaut.exe"
     fi
 
-    local download_url="https://github.com/${REPO}/releases/download/${version}/termonaut-${version}-${platform}.tar.gz"
-    local temp_archive="${temp_dir}/termonaut-${version}-${platform}.tar.gz"
-    local temp_binary="${temp_dir}/termonaut-${platform}"
+    # Remove 'v' prefix from version for file naming
+    local file_version=$(echo "$version" | sed 's/^v//')
+    local download_url="https://github.com/${REPO}/releases/download/${version}/termonaut-${file_version}-${platform}.tar.gz"
+    local temp_archive="${temp_dir}/termonaut-${file_version}-${platform}.tar.gz"
+    local temp_binary="${temp_dir}/termonaut-${file_version}-${platform}"
     local final_binary="${install_dir}/termonaut"
 
     print_status "Creating temporary directory..."
@@ -446,7 +443,14 @@ main() {
     # Choose installation directory
     local install_dir
     install_dir=$(choose_install_dir)
-    print_success "Installation directory: ${install_dir}"
+    if [ "$install_dir" = "$USER_INSTALL_DIR" ]; then
+        print_status "Using user installation directory: ${install_dir}"
+        print_warning "You may need to add $install_dir to your PATH"
+    elif [ "$install_dir" = "/usr/local/bin" ]; then
+        print_status "Using system installation directory: ${install_dir}"
+    else
+        print_status "Using custom installation directory: ${install_dir}"
+    fi
 
     # Install
     install_termonaut "$platform" "$version" "$install_dir"

@@ -1,0 +1,58 @@
+name: Update Termonaut Stats
+
+on:
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+  push:
+    paths:
+      - '.termonaut/**'
+
+jobs:
+  update-stats:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+
+    - name: Install Termonaut
+      run: |
+        go install github.com/oiahoon/termonaut/cmd/termonaut@latest
+
+    - name: Generate Badge Data
+      run: |
+        mkdir -p badges
+
+        # Generate badges from local data if available
+        if [ -f ".termonaut/termonaut.db" ]; then
+          termonaut badges generate --output badges/
+        else
+          # Generate placeholder badges
+          echo '{"schemaVersion":1,"label":"Commands","message":"0","color":"lightgrey"}' > badges/commands.json
+          echo '{"schemaVersion":1,"label":"Level","message":"1","color":"lightgrey"}' > badges/level.json
+          echo '{"schemaVersion":1,"label":"Streak","message":"0 days","color":"red"}' > badges/streak.json
+          echo '{"schemaVersion":1,"label":"Productivity","message":"0.0%","color":"red"}' > badges/productivity.json
+          echo '{"schemaVersion":1,"label":"Achievements","message":"0/0","color":"lightgrey"}' > badges/achievements.json
+        fi
+
+    - name: Update Profile Stats
+      run: |
+        # Generate profile stats markdown
+        if [ -f ".termonaut/termonaut.db" ]; then
+          termonaut profile generate --output TERMONAUT_PROFILE.md
+        fi
+
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add badges/ TERMONAUT_PROFILE.md || true
+        git diff --staged --quiet || git commit -m "🚀 Update Termonaut stats - $(date)"
+        git push

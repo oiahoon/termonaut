@@ -64,6 +64,13 @@
    - 提供故障排除指南
    - 备用安装方法(Homebrew, 源码编译)
 
+5. **完整的Homebrew支持**:
+   - 提供标准的Homebrew formula (`Formula/termonaut.rb`)
+   - 支持多平台和多架构 (macOS Intel/ARM, Linux x64/ARM64)
+   - 自动化构建和发布流程 (`scripts/release-homebrew.sh`)
+   - 自动checksums生成和验证
+   - 用户友好的安装后提示和设置指导
+
 **预防措施**: 新用户使用更新后的安装脚本将获得更好的体验和错误处理。
 
 ---

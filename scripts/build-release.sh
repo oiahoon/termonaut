@@ -48,7 +48,7 @@ cd ${BUILD_DIR}
 
 # macOS Intel
 tar -czf ${BINARY_NAME}-${VERSION}-darwin-amd64.tar.gz ${BINARY_NAME}-darwin-amd64
-# macOS Apple Silicon  
+# macOS Apple Silicon
 tar -czf ${BINARY_NAME}-${VERSION}-darwin-arm64.tar.gz ${BINARY_NAME}-darwin-arm64
 # Linux x86_64
 tar -czf ${BINARY_NAME}-${VERSION}-linux-amd64.tar.gz ${BINARY_NAME}-linux-amd64
@@ -57,7 +57,13 @@ tar -czf ${BINARY_NAME}-${VERSION}-linux-arm64.tar.gz ${BINARY_NAME}-linux-arm64
 
 # Generate checksums
 echo "🔐 Generating checksums..."
-shasum -a 256 *.tar.gz > ${BINARY_NAME}-${VERSION}-checksums.txt
+if command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 *.tar.gz > ${BINARY_NAME}-${VERSION}-checksums.txt
+elif command -v sha256sum >/dev/null 2>&1; then
+    sha256sum *.tar.gz > ${BINARY_NAME}-${VERSION}-checksums.txt
+else
+    echo "Warning: Neither shasum nor sha256sum found. Checksums not generated."
+fi
 
 cd ..
 
@@ -72,4 +78,4 @@ echo ""
 echo "📋 Next steps:"
 echo "1. Upload the .tar.gz files to GitHub Release"
 echo "2. Use the checksums in the Homebrew formula"
-echo "3. Update the Homebrew formula with the new version" 
+echo "3. Update the Homebrew formula with the new version"

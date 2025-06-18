@@ -92,11 +92,11 @@ sudo mv termonaut /usr/local/bin/
 
 **Homebrew Installation (Recommended):**
 ```bash
-# Install from Homebrew (coming soon to homebrew-core!)
+# Install from our custom tap
+brew tap oiahoon/termonaut
 brew install termonaut
 
-# Or install from our custom tap (available now)
-brew tap oiahoon/termonaut
+# Or install from homebrew-core (coming soon!)
 brew install termonaut
 ```
 

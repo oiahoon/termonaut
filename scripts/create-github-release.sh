@@ -13,8 +13,9 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 # Configuration
-VERSION="0.9.0"
-RELEASE_TITLE="Termonaut v${VERSION} - Release Candidate: Enhanced UX & Empty Command Stats"
+VERSION="v0.9.0"
+BUILD_VERSION="0.9.0"  # Version used in file names
+RELEASE_TITLE="Termonaut v0.9.0 - Official Stable Release with Complete GitHub Integration & Enhanced UX"
 REPO_OWNER="oiahoon"
 REPO_NAME="termonaut"
 
@@ -37,9 +38,9 @@ if ! gh auth status &> /dev/null; then
 fi
 
 # Check if release files exist
-if [[ ! -d "dist" ]] || [[ ! -f "dist/RELEASE_NOTES_${VERSION}.md" ]]; then
+if [[ ! -d "dist" ]] || [[ ! -f "dist/RELEASE_NOTES_${BUILD_VERSION}.md" ]]; then
     echo -e "${RED}❌ Release artifacts not found${NC}"
-    echo -e "Run the release build script first: ./scripts/release-${VERSION}.sh"
+    echo -e "Run the release build script first: ./scripts/release-${BUILD_VERSION}.sh"
     exit 1
 fi
 
@@ -57,8 +58,7 @@ fi
 gh release create "${VERSION}" \
     --repo "${REPO_OWNER}/${REPO_NAME}" \
     --title "${RELEASE_TITLE}" \
-    --notes-file "dist/RELEASE_NOTES_${VERSION}.md" \
-    --prerelease \
+    --notes-file "dist/RELEASE_NOTES_${BUILD_VERSION}.md" \
     --generate-notes
 
 echo -e "${GREEN}✅ Release created successfully${NC}"
@@ -67,7 +67,7 @@ echo -e "${GREEN}✅ Release created successfully${NC}"
 echo -e "${BLUE}📦 Uploading release assets...${NC}"
 
 # Upload binaries
-for file in dist/termonaut-${VERSION}-*; do
+for file in dist/termonaut-${BUILD_VERSION}-*; do
     if [[ -f "$file" && ! "$file" =~ \.md$ && ! "$file" =~ checksums ]]; then
         echo -e "Uploading $(basename "$file")..."
         gh release upload "${VERSION}" "$file" --repo "${REPO_OWNER}/${REPO_NAME}"
@@ -76,7 +76,7 @@ done
 
 # Upload checksums
 echo -e "Uploading checksums..."
-gh release upload "${VERSION}" "dist/termonaut-${VERSION}-checksums.txt" --repo "${REPO_OWNER}/${REPO_NAME}"
+gh release upload "${VERSION}" "dist/termonaut-${BUILD_VERSION}-checksums.txt" --repo "${REPO_OWNER}/${REPO_NAME}"
 
 echo -e "${GREEN}✅ All assets uploaded successfully${NC}"
 
@@ -87,11 +87,11 @@ echo
 echo -e "${BLUE}📋 Release Details:${NC}"
 echo -e "• URL: https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/tag/${VERSION}"
 echo -e "• Title: ${RELEASE_TITLE}"
-echo -e "• Type: Pre-release (Release Candidate)"
+echo -e "• Type: Stable Release"
 echo
 echo -e "${YELLOW}📋 Next Steps:${NC}"
 echo -e "1. Test the release thoroughly"
-echo -e "2. Announce RC to community for feedback"
+echo -e "2. Announce stable release to community for feedback"
 echo -e "3. Collect feedback and iterate"
 echo -e "4. Prepare for v1.0.0 stable release"
 echo

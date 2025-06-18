@@ -34,6 +34,15 @@ Termonaut is a lightweight, privacy-focused terminal productivity tracker that g
 - **New Command Bonuses**: Extra XP for exploring new tools and commands
 - **Streak Rewards**: Maintain daily/weekly usage streaks for motivation
 
+### 🎨 **Avatar System** ⭐ *NEW in v0.9.1!*
+- **Visual Identity**: Personalized ASCII art avatars that evolve with your level
+- **Smart Layout**: Side-by-side stats display with intelligent terminal width detection
+- **Multiple Styles**: Choose from pixel-art, bottts, adventurer, or avataaars themes
+- **Adaptive Sizing**: Automatically adjusts avatar size (mini/small/medium/large) based on terminal width
+- **Rich Details**: High-quality colored ASCII art with optimized character sets for maximum detail
+- **Evolution System**: Avatar appearance changes and gains new features as you level up
+- **Full Management**: Complete avatar configuration, preview, and refresh commands
+
 ### 📊 **Rich CLI Interface**
 - **Interactive Stats**: Beautiful terminal-native data visualization
 - **Multiple Views**: Session summaries, command breakdowns, and trend analysis
@@ -144,6 +153,20 @@ termonaut sessions           # Recent terminal sessions
 tn xp                        # Current XP and level
 tn badges                    # Earned achievements
 tn sessions                  # Recent terminal sessions
+```
+
+**Avatar Management:**
+```bash
+termonaut avatar show        # Display your current avatar
+termonaut avatar config --style pixel-art  # Change avatar style
+termonaut avatar preview -l 10  # Preview avatar at level 10
+termonaut avatar refresh     # Force regenerate avatar
+termonaut avatar stats       # Avatar system statistics
+
+# Short commands:
+tn avatar show               # Display your current avatar
+tn avatar config --style bottts  # Change to robot style
+tn avatar preview -l 25      # Preview high-level avatar
 ```
 
 **Configuration:**

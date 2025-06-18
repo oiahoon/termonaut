@@ -94,8 +94,6 @@ detect_platform() {
 
 # Get the latest release version
 get_latest_version() {
-    print_status "Fetching latest version information..."
-
     local version=""
     if command -v curl >/dev/null 2>&1; then
         version=$(curl -s "${GITHUB_RELEASES}" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' 2>/dev/null)
@@ -165,8 +163,9 @@ install_termonaut() {
         binary_name="termonaut.exe"
     fi
 
-    local download_url="https://github.com/${REPO}/releases/download/${version}/termonaut-${platform}"
-    local temp_binary="${temp_dir}/${binary_name}"
+    local download_url="https://github.com/${REPO}/releases/download/${version}/termonaut-${version}-${platform}.tar.gz"
+    local temp_archive="${temp_dir}/termonaut-${version}-${platform}.tar.gz"
+    local temp_binary="${temp_dir}/termonaut-${platform}"
     local final_binary="${install_dir}/termonaut"
 
     print_status "Creating temporary directory..."
@@ -177,14 +176,14 @@ install_termonaut() {
 
     # Download with better error handling
     if command -v curl >/dev/null 2>&1; then
-        if ! curl -L --fail --silent --show-error -o "$temp_binary" "$download_url"; then
+        if ! curl -L --fail --silent --show-error -o "$temp_archive" "$download_url"; then
             print_error "Failed to download from: $download_url"
             print_error "Please check if the release exists for your platform"
             rm -rf "$temp_dir"
             exit 1
         fi
     elif command -v wget >/dev/null 2>&1; then
-        if ! wget --quiet -O "$temp_binary" "$download_url"; then
+        if ! wget --quiet -O "$temp_archive" "$download_url"; then
             print_error "Failed to download from: $download_url"
             print_error "Please check if the release exists for your platform"
             rm -rf "$temp_dir"
@@ -193,8 +192,25 @@ install_termonaut() {
     fi
 
     # Verify download
-    if [[ ! -f "$temp_binary" ]] || [[ ! -s "$temp_binary" ]]; then
+    if [[ ! -f "$temp_archive" ]] || [[ ! -s "$temp_archive" ]]; then
         print_error "Downloaded file is missing or empty"
+        rm -rf "$temp_dir"
+        exit 1
+    fi
+
+    # Extract the archive
+    print_status "Extracting archive..."
+    if ! tar -xzf "$temp_archive" -C "$temp_dir"; then
+        print_error "Failed to extract archive"
+        rm -rf "$temp_dir"
+        exit 1
+    fi
+
+    # Verify binary exists after extraction
+    if [[ ! -f "$temp_binary" ]]; then
+        print_error "Binary not found after extraction: $temp_binary"
+        print_error "Available files:"
+        ls -la "$temp_dir"
         rm -rf "$temp_dir"
         exit 1
     fi
@@ -422,6 +438,7 @@ main() {
     print_success "Detected platform: ${platform}"
 
     # Get latest version
+    print_status "Fetching latest version information..."
     local version
     version=$(get_latest_version)
     print_success "Latest version: ${version}"

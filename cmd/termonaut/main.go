@@ -114,6 +114,68 @@ var versionCmd = &cobra.Command{
 	},
 }
 
+var promptCmd = &cobra.Command{
+	Use:   "prompt",
+	Short: "Generate shell prompt integration",
+	Long: `Generate a compact status for shell prompt integration.
+
+This command outputs a brief summary suitable for shell prompts.
+Add to your shell configuration:
+
+Bash/Zsh:
+  export PS1="$(termonaut prompt) $PS1"
+
+Fish:
+  function fish_prompt
+      echo (termonaut prompt) (fish_prompt)
+  end`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// Load configuration
+		cfg, err := config.Load()
+		if err != nil {
+			// Silent fail for prompt integration
+			return nil
+		}
+
+		// Initialize logger (silent)
+		logger := setupLogger("error")
+
+		// Initialize database
+		db, err := database.New(config.GetDataDir(cfg), logger)
+		if err != nil {
+			// Silent fail for prompt integration
+			return nil
+		}
+		defer db.Close()
+
+		// Initialize stats calculator
+		statsCalc := stats.New(db)
+
+		// Get basic stats
+		basicStats, err := statsCalc.GetBasicStats()
+		if err != nil {
+			// Silent fail for prompt integration
+			return nil
+		}
+
+		// Get user progress
+		userProgress, err := db.GetUserProgress()
+		if err != nil {
+			// Silent fail for prompt integration
+			return nil
+		}
+
+		// Generate compact prompt
+		if cfg.Theme == "minimal" {
+			fmt.Printf("[L%d %dc]", userProgress.CurrentLevel, basicStats.TotalCommands)
+		} else {
+			fmt.Printf("🚀L%d(%dc)", userProgress.CurrentLevel, basicStats.TotalCommands)
+		}
+
+		return nil
+	},
+}
+
 func init() {
 	// Add subcommands
 	rootCmd.AddCommand(statsCmd)
@@ -121,6 +183,7 @@ func init() {
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(logCommandCmd)
 	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(promptCmd)
 
 	// Add gamification commands
 	rootCmd.AddCommand(progressCmd)

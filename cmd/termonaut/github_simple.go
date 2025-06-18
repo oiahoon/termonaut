@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/oiahoon/termonaut/internal/config"
 	"github.com/oiahoon/termonaut/internal/database"
@@ -210,15 +210,27 @@ var actionsListCmd = &cobra.Command{
 	Short: "List available workflow templates",
 	Long:  `List all available GitHub Actions workflow templates.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		repoOwner := viper.GetString("github.repo_owner")
-		repoName := viper.GetString("github.repo_name")
+		cfg, err := config.Load()
+		if err != nil {
+			return fmt.Errorf("failed to load config: %w", err)
+		}
 
-		if repoOwner == "" || repoName == "" {
+		if cfg.SyncRepo == "" {
 			fmt.Println("Configure GitHub repository first:")
-			fmt.Println("  termonaut config set github.repo_owner your-username")
-			fmt.Println("  termonaut config set github.repo_name your-repo")
+			fmt.Println("  termonaut config set sync_repo your-username/your-repo")
 			return nil
 		}
+
+		// Parse repository information
+		repoParts := strings.Split(cfg.SyncRepo, "/")
+		if len(repoParts) != 2 {
+			fmt.Println("Invalid repository format. Use: username/repository")
+			fmt.Println("  termonaut config set sync_repo your-username/your-repo")
+			return nil
+		}
+
+		repoOwner := repoParts[0]
+		repoName := repoParts[1]
 
 		actionsManager := github.NewActionsManager(repoOwner, repoName)
 		templates := actionsManager.GetWorkflowTemplates()
@@ -242,14 +254,25 @@ var actionsGenerateCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		templateName := args[0]
 
-		repoOwner := viper.GetString("github.repo_owner")
-		repoName := viper.GetString("github.repo_name")
-
-		if repoOwner == "" || repoName == "" {
-			return fmt.Errorf("configure GitHub repository first:\n" +
-				"  termonaut config set github.repo_owner your-username\n" +
-				"  termonaut config set github.repo_name your-repo")
+		cfg, err := config.Load()
+		if err != nil {
+			return fmt.Errorf("failed to load config: %w", err)
 		}
+
+		if cfg.SyncRepo == "" {
+			return fmt.Errorf("configure GitHub repository first:\n" +
+				"  termonaut config set sync_repo your-username/your-repo")
+		}
+
+		// Parse repository information
+		repoParts := strings.Split(cfg.SyncRepo, "/")
+		if len(repoParts) != 2 {
+			return fmt.Errorf("invalid repository format. Use: username/repository\n" +
+				"  termonaut config set sync_repo your-username/your-repo")
+		}
+
+		repoOwner := repoParts[0]
+		repoName := repoParts[1]
 
 		actionsManager := github.NewActionsManager(repoOwner, repoName)
 

@@ -179,7 +179,17 @@ benchmark-results/
 *.zip
 checksums.txt
 
+# Binary releases (large files should not be in git)
+releases/*/termonaut-*
+releases/*/*.exe
+releases/*/*.bin
+releases/*/*.tar.gz
+releases/*/*.zip
+
 # Development shortcuts
 dev-*
 local-*
-debug-* 
+debug-*
+
+# Release summaries (generated files)
+RELEASE_SUMMARY_*.md

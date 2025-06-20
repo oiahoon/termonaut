@@ -5,6 +5,95 @@ All notable changes to Termonaut will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.1] - 2025-06-19 - Avatar System & Intelligent UI 🎨
+
+### 🎨 Major New Features
+
+**Avatar System - Complete Visual Identity**
+- **Personalized ASCII Art Avatars**: Unique visual representation that evolves with your level
+- **Smart Side-by-Side Layout**: Intelligent stats display with avatar on left, stats on right
+- **Adaptive Terminal Sizing**: Automatically adjusts avatar size based on terminal width
+  - Mini (10x5), Small (20x10), Medium (40x20), Large (60x30)
+  - Smart detection with fallback to 80x24 default
+- **Multiple Avatar Styles**: Choose from 4 distinct themes
+  - `pixel-art`: Retro 8-bit gaming style (default)
+  - `bottts`: Modern robot/android theme
+  - `adventurer`: Fantasy RPG character style
+  - `avataaars`: Contemporary cartoon style
+- **Rich Visual Quality**: High-quality colored ASCII art with optimized character sets
+  - 24-bit color support with vivid ANSI escape codes
+  - Size-specific character optimization for maximum detail
+  - Enhanced ascii-image-converter parameters for best results
+
+### ✨ Enhanced User Experience
+
+**Intelligent Dashboard Layout**
+- **Terminal Width Detection**: Uses golang.org/x/term for accurate terminal size detection
+- **Responsive Design**: Automatically adjusts layout based on available space
+- **Rich Statistics Display**: Enhanced stats with progress bars, achievements, and insights
+- **Visual Separators**: Professional layout with borders and column separators
+- **ANSI Code Filtering**: Accurate width calculation removing color codes
+
+**Avatar Management System**
+- **Complete CLI Interface**: Full suite of avatar management commands
+  - `termonaut avatar show` - Display current avatar with level info
+  - `termonaut avatar config` - Configure style and size preferences
+  - `termonaut avatar preview -l X` - Preview avatar at different levels
+  - `termonaut avatar refresh` - Force regenerate avatar cache
+  - `termonaut avatar stats` - System statistics and cache info
+- **Evolution System**: Avatar appearance changes as you level up
+  - Deterministic generation based on username + level + tier
+  - Visual progression every 5 levels with new features
+  - Next evolution level indicators
+- **Intelligent Caching**: 7-day TTL with automatic cache management
+  - MD5-based cache keys for efficient storage
+  - Cache hit/miss logging for performance monitoring
+  - Automatic cleanup and refresh capabilities
+
+### 🔧 Technical Improvements
+
+**Enhanced Dependencies**
+- **ascii-image-converter v1.13.1**: Professional ASCII art conversion
+- **golang.org/x/term**: Terminal size detection and control
+- **DiceBear 9.0 API**: High-quality avatar generation service
+
+**Quality Optimizations**
+- **Size-Specific Character Sets**: Optimized ASCII characters for each avatar size
+- **Advanced Converter Parameters**: Complex character mapping, color enhancement, threshold tuning
+- **Performance Optimization**: Parallel processing, efficient caching, minimal network requests
+- **Error Handling**: Graceful fallbacks to regular stats display on avatar failures
+
+### 📊 Enhanced Statistics Display
+
+**Rich Dashboard Features**
+- **Progress Visualization**: XP progress bars with percentage display
+- **Achievement Tracking**: Automatic achievement detection and display
+- **Productivity Insights**: Average commands per session, usage patterns
+- **Top Commands Visualization**: Bar charts for most-used commands
+- **Contextual Tips**: Configuration hints and next evolution information
+
+### 🎮 Gamification Enhancements
+
+**Avatar Evolution System**
+- **Level-Based Progression**: Visual changes every 5 levels
+- **Style Consistency**: Maintained character identity across levels
+- **Multiple Tiers**: Different visual themes for various level ranges
+- **Social Features**: Shareable avatar previews and configurations
+
+### 🛠️ Configuration Management
+
+**Avatar Configuration**
+- **Persistent Settings**: Avatar style and size preferences saved to config
+- **Easy Switching**: Quick style changes with immediate refresh
+- **Validation**: Input validation for all avatar parameters
+- **Integration**: Seamless integration with existing configuration system
+
+### 📖 Documentation
+
+- **Avatar System Specification**: Complete technical documentation
+- **User Guides**: Updated README with avatar usage examples
+- **Configuration Reference**: All new avatar-related settings documented
+
 ## [0.9.0] - 2025-01-20 - Official Stable Release 🚀
 
 ### 🎉 Stable Release Highlights

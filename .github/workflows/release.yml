@@ -274,12 +274,31 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Update Homebrew Formula
+    - name: Trigger Homebrew Update
       if: success()
-      run: |
-        echo "🍺 Homebrew formula update would be triggered here"
-        echo "This could be implemented with a separate workflow or webhook"
-        echo "Formula location: Formula/termonaut.rb"
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const version = "${{ steps.version.outputs.VERSION }}";
+
+          console.log(`🍺 Triggering Homebrew formula update for ${version}`);
+
+          try {
+            await github.rest.actions.createWorkflowDispatch({
+              owner,
+              repo,
+              workflow_id: 'update-homebrew.yml',
+              ref: 'main',
+              inputs: {
+                version: version
+              }
+            });
+            console.log(`✅ Successfully triggered Homebrew update workflow`);
+          } catch (error) {
+            console.log(`⚠️ Failed to trigger Homebrew workflow: ${error.message}`);
+            console.log(`📋 Manual trigger: https://github.com/${owner}/${repo}/actions/workflows/update-homebrew.yml`);
+          }
 
   notify:
     name: Notify Success

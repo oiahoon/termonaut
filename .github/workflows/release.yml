@@ -11,6 +11,10 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: write
+  actions: read
+
 env:
   GO_VERSION: '1.23'
 

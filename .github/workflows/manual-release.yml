@@ -60,7 +60,14 @@ jobs:
     - name: Create and push tag
       if: ${{ github.event.inputs.create_tag == 'true' }}
       run: |
-        VERSION="v${{ github.event.inputs.version }}"
+        INPUT_VERSION="${{ github.event.inputs.version }}"
+
+        # Smart version handling - add v prefix only if not already present
+        if [[ $INPUT_VERSION == v* ]]; then
+          VERSION="$INPUT_VERSION"
+        else
+          VERSION="v$INPUT_VERSION"
+        fi
 
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
@@ -81,7 +88,14 @@ jobs:
 
     - name: Summary
       run: |
-        VERSION="v${{ github.event.inputs.version }}"
+        INPUT_VERSION="${{ github.event.inputs.version }}"
+
+        # Smart version handling - add v prefix only if not already present
+        if [[ $INPUT_VERSION == v* ]]; then
+          VERSION="$INPUT_VERSION"
+        else
+          VERSION="v$INPUT_VERSION"
+        fi
         echo "🎉 Release preparation completed!"
         echo ""
         echo "📋 What happened:"

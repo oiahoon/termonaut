@@ -3,6 +3,7 @@ package gamification
 import (
 	"fmt"
 	"math/rand"
+	"os"
 	"strings"
 	"time"
 )
@@ -59,7 +60,7 @@ func isCommonCommand(cmd string) bool {
 		"scp", "sudo", "su", "systemctl", "service", "apt", "yum", "brew", "pip", "npm",
 		"docker", "kubectl", "make", "gcc", "python", "node", "go", "java", "mysql", "psql",
 	}
-	
+
 	for _, common := range commonCommands {
 		if strings.EqualFold(cmd, common) {
 			return true
@@ -90,8 +91,10 @@ func getEasterEggTriggers() []EasterEggTrigger {
 				"Terminal ninja detected! 🥷⚡",
 				"Slow down, Flash! ⚡🛑",
 				"Are you typing or playing piano? 🎹💨",
+				"Speedrun.com would be proud! 🏆⚡",
+				"Terminal Olympics gold medal! 🥇💨",
 			},
-			Probability: 0.8,
+			Probability: 0.15,
 		},
 		{
 			ID: "coffee_break",
@@ -105,8 +108,11 @@ func getEasterEggTriggers() []EasterEggTrigger {
 				"Did you get lost in the real world? 🌍",
 				"Back from the coffee machine? ☕😴",
 				"Productivity pause detected! 🛑☕",
+				"The terminal was getting lonely... 🥺",
+				"Did you solve world hunger while away? 🌍✨",
+				"Welcome back, keyboard warrior! ⌨️🛡️",
 			},
-			Probability: 0.6,
+			Probability: 0.25,
 		},
 		{
 			ID: "new_day",
@@ -120,8 +126,11 @@ func getEasterEggTriggers() []EasterEggTrigger {
 				"Time to level up today! 📈🎯",
 				"Another day, another shell! 🐚☀️",
 				"Ready to conquer the command line? 👑💻",
+				"Today's forecast: 100% chance of productivity! 🌤️💪",
+				"The early bird catches the... commits? 🐦📝",
+				"Rise and grind, code ninja! 🥷☀️",
 			},
-			Probability: 0.9,
+			Probability: 0.4,
 		},
 		{
 			ID: "quote_mismatch",
@@ -134,8 +143,10 @@ func getEasterEggTriggers() []EasterEggTrigger {
 				"Quote escape artist! 🎪📜",
 				"Did you forget to close something? 🔓💭",
 				"Quote limbo! How low can you go? 🤸‍♀️",
+				"Syntax error in 3... 2... 1... 💥",
+				"The shell is confused by your poetry! 📝🤔",
 			},
-			Probability: 0.7,
+			Probability: 0.3,
 		},
 		{
 			ID: "git_commit_typo",
@@ -149,8 +160,11 @@ func getEasterEggTriggers() []EasterEggTrigger {
 				"Git gud at commit messages! 😎📝",
 				"'Fix' #666: Achievement unlocked! 👹🎯",
 				"The eternal cycle of fixes begins... 🔄♾️",
+				"Plot twist: This fix breaks something else! 🎭💥",
+				"Commit message creativity level: 0/10 😂",
+				"'Fix' - the most overused word in git history! 📚",
 			},
-			Probability: 0.5,
+			Probability: 0.2,
 		},
 		{
 			ID: "docker_whale",
@@ -163,8 +177,11 @@ func getEasterEggTriggers() []EasterEggTrigger {
 				"Dockerizing all the things! 🐳🚀",
 				"Whale, whale, whale... what do we have here? 🐋",
 				"Setting sail with containers! ⛵📦",
+				"It works on my machine... in a container! 📦😏",
+				"Containerization nation! 🏗️🐳",
+				"Docker: Making deployment less scary since 2013! 🎭",
 			},
-			Probability: 0.3,
+			Probability: 0.15,
 		},
 		{
 			ID: "kubernetes_captain",
@@ -178,8 +195,11 @@ func getEasterEggTriggers() []EasterEggTrigger {
 				"Pod life chose you! 🫛💫",
 				"Sailing the cluster seas! 🌊⛵",
 				"May the pods be with you! 🫛⭐",
+				"Kubectl-ing like a boss! 👑⚓",
+				"Cluster management level: Expert! 🎯🏆",
+				"YAML files fear your power! 📝⚡",
 			},
-			Probability: 0.4,
+			Probability: 0.2,
 		},
 		{
 			ID: "vim_escape",
@@ -192,8 +212,11 @@ func getEasterEggTriggers() []EasterEggTrigger {
 				"Vim: Where legends are made! ⚔️📜",
 				"Good luck escaping! 😅🚪",
 				"Welcome to the text editor maze! 🧩✏️",
+				"hjkl warriors unite! ⚔️🎮",
+				"Modal editing: confusing newcomers since 1976! 🤯📅",
+				"Vim or Emacs? The eternal question... 🤔⚡",
 			},
-			Probability: 0.6,
+			Probability: 0.25,
 		},
 		{
 			ID: "exit_command",
@@ -222,8 +245,8 @@ func getEasterEggTriggers() []EasterEggTrigger {
 				for i := len(ctx.CommandHistory) - 3; i < len(ctx.CommandHistory); i++ {
 					cmd := ctx.CommandHistory[i]
 					// Simple heuristic: commands with typos or non-existent commands
-					if strings.Contains(cmd, "command not found") || 
-					   len(strings.Fields(cmd)) == 1 && !isCommonCommand(cmd) {
+					if strings.Contains(cmd, "command not found") ||
+						len(strings.Fields(cmd)) == 1 && !isCommonCommand(cmd) {
 						errorCommands++
 					}
 				}
@@ -244,7 +267,7 @@ func getEasterEggTriggers() []EasterEggTrigger {
 			Condition: func(ctx *EasterEggContext) bool {
 				now := time.Now()
 				return (now.Hour() == 4 && now.Minute() == 20) ||
-					   (now.Hour() == 16 && now.Minute() == 20) // 4:20 PM too
+					(now.Hour() == 16 && now.Minute() == 20) // 4:20 PM too
 			},
 			Messages: []string{
 				"🌿 Wakey wakey, hacker! 👁️",
@@ -290,8 +313,8 @@ func getEasterEggTriggers() []EasterEggTrigger {
 			ID: "git_push_force",
 			Condition: func(ctx *EasterEggContext) bool {
 				cmd := strings.ToLower(ctx.LastCommand)
-				return strings.Contains(cmd, "git push") && 
-					   (strings.Contains(cmd, "--force") || strings.Contains(cmd, "-f"))
+				return strings.Contains(cmd, "git push") &&
+					(strings.Contains(cmd, "--force") || strings.Contains(cmd, "-f"))
 			},
 			Messages: []string{
 				"⚠️ Force push detected! May the Git be with you! 🌟",
@@ -299,15 +322,18 @@ func getEasterEggTriggers() []EasterEggTrigger {
 				"🚨 Red alert! Force push in progress! 🚨",
 				"⚡ With great power comes great responsibility! 🕷️",
 				"🙏 Hoping your teammates forgive you! 😅",
+				"Force push: The nuclear option of Git! ☢️💥",
+				"Your commit history just got rewritten! 📝✨",
+				"Breaking: Local developer breaks production! 📰💥",
 			},
-			Probability: 0.8,
+			Probability: 0.3,
 		},
 		{
 			ID: "massive_list",
 			Condition: func(ctx *EasterEggContext) bool {
 				cmd := strings.ToLower(ctx.LastCommand)
-				return strings.HasPrefix(cmd, "ls") && 
-					   (strings.Contains(cmd, "/") || strings.Contains(cmd, "*"))
+				return strings.HasPrefix(cmd, "ls") &&
+					(strings.Contains(cmd, "/") || strings.Contains(cmd, "*"))
 			},
 			Messages: []string{
 				"📂 Exploring the file system like a true explorer! 🗺️",
@@ -322,8 +348,8 @@ func getEasterEggTriggers() []EasterEggTrigger {
 			ID: "rm_danger",
 			Condition: func(ctx *EasterEggContext) bool {
 				cmd := strings.ToLower(ctx.LastCommand)
-				return strings.HasPrefix(cmd, "rm") && 
-					   (strings.Contains(cmd, "-r") || strings.Contains(cmd, "*"))
+				return strings.HasPrefix(cmd, "rm") &&
+					(strings.Contains(cmd, "-r") || strings.Contains(cmd, "*"))
 			},
 			Messages: []string{
 				"⚠️ Danger zone! Hope you know what you're doing! 😰",
@@ -331,8 +357,10 @@ func getEasterEggTriggers() []EasterEggTrigger {
 				"🗑️ Spring cleaning or digital chaos? 🤔",
 				"⚡ With great rm comes great responsibility! 🕷️",
 				"🙏 RIP files... may they rest in /dev/null 👻",
+				"Files deleted faster than you can say 'oops'! 💨🗑️",
+				"Marie Kondo would be proud... or terrified! 🧹😱",
 			},
-			Probability: 0.7,
+			Probability: 0.25,
 		},
 		{
 			ID: "productivity_beast",
@@ -370,8 +398,15 @@ func getEasterEggTriggers() []EasterEggTrigger {
 					"  │   World │\n" +
 					"  ╰─────────╯\n" +
 					"The terminal speaks!",
+				"🎪 ASCII Circus!\n" +
+					"    ∩───∩\n" +
+					"   (  ◕   ◕ )\n" +
+					"    \\   ▽  /\n" +
+					"     \\     /\n" +
+					"      \\___/\n" +
+					"Code Bear says hi!",
 			},
-			Probability: 0.2,
+			Probability: 0.05,
 		},
 		{
 			ID: "hidden_command",
@@ -423,8 +458,10 @@ func getEasterEggTriggers() []EasterEggTrigger {
 				"🏖️ Weekend.exe starting...",
 				"😎 Friday feels! Almost there!",
 				"🎊 Last sprint before freedom!",
+				"Friday deploy? Living dangerously! 🎲💥",
+				"Weekend warrior mode: Activating! 🏹⚔️",
 			},
-			Probability: 0.3,
+			Probability: 0.1,
 		},
 		{
 			ID: "monday_blues",
@@ -437,8 +474,10 @@ func getEasterEggTriggers() []EasterEggTrigger {
 				"🌟 New week, new opportunities!",
 				"⚡ Monday energy charging... 🔋",
 				"🎯 Week one, day one. Let's go!",
+				"Monday: The boss battle of weekdays! ⚔️👔",
+				"Coffee levels: Critical! Productivity: Pending! ☕⏳",
 			},
-			Probability: 0.4,
+			Probability: 0.15,
 		},
 		{
 			ID: "long_command",
@@ -451,14 +490,116 @@ func getEasterEggTriggers() []EasterEggTrigger {
 				"📚 Command line literature!",
 				"🎭 Shakespearean command detected!",
 				"📖 TL;DR version available? 😅",
+				"Command length: Enterprise edition! 🏢📏",
+				"Breaking: Developer discovers the spacebar! 📰⌨️",
 			},
-			Probability: 0.6,
+			Probability: 0.2,
+		},
+		{
+			ID: "python_snake",
+			Condition: func(ctx *EasterEggContext) bool {
+				cmd := strings.ToLower(ctx.LastCommand)
+				return strings.HasPrefix(cmd, "python") || strings.Contains(cmd, ".py")
+			},
+			Messages: []string{
+				"🐍 Python detected! Ssssslithering into code!",
+				"Import this: Beautiful is better than ugly! 🌟📜",
+				"Pythonic vibes activated! 🐍✨",
+				"Zen of Python loading... 🧘‍♂️🐍",
+				"Snake charmer at work! 🎵🐍",
+				"Life's too short for semicolons! 😏🐍",
+			},
+			Probability: 0.1,
+		},
+		{
+			ID: "javascript_chaos",
+			Condition: func(ctx *EasterEggContext) bool {
+				cmd := strings.ToLower(ctx.LastCommand)
+				return strings.Contains(cmd, "node") || strings.Contains(cmd, "npm") ||
+					strings.Contains(cmd, ".js") || strings.Contains(cmd, "yarn")
+			},
+			Messages: []string{
+				"JavaScript: Making the impossible... possible! 🎭💫",
+				"undefined is not a function... yet! 🤷‍♂️💥",
+				"Node.js: JavaScript everywhere! 🌍⚡",
+				"NPM install: Downloading the internet... 📦🌐",
+				"== vs === : The eternal struggle! ⚖️😅",
+				"Callback hell survivors club! 🔥😈",
+			},
+			Probability: 0.1,
+		},
+		{
+			ID: "database_queries",
+			Condition: func(ctx *EasterEggContext) bool {
+				cmd := strings.ToLower(ctx.LastCommand)
+				return strings.Contains(cmd, "mysql") || strings.Contains(cmd, "psql") ||
+					strings.Contains(cmd, "mongo") || strings.Contains(cmd, "redis") ||
+					strings.Contains(cmd, "sqlite")
+			},
+			Messages: []string{
+				"Database whisperer detected! 🗄️🔮",
+				"SELECT * FROM awesome WHERE you = 'amazing'! 🏆📊",
+				"Joining tables like a relationship counselor! 💒📋",
+				"SQL: Structured Query Language or Squirrel? 🐿️🤔",
+				"NoSQL? More like NoProblems! 📊😎",
+				"ACID compliance: Not just for chemistry! ⚗️📊",
+			},
+			Probability: 0.15,
+		},
+		{
+			ID: "testing_dedication",
+			Condition: func(ctx *EasterEggContext) bool {
+				cmd := strings.ToLower(ctx.LastCommand)
+				return strings.Contains(cmd, "test") || strings.Contains(cmd, "jest") ||
+					strings.Contains(cmd, "pytest") || strings.Contains(cmd, "rspec") ||
+					strings.Contains(cmd, "mocha")
+			},
+			Messages: []string{
+				"Testing in production? How adventurous! 🎢🧪",
+				"Red, Green, Refactor - the holy trinity! 🔴🟢🔄",
+				"99 bugs in the code, take one down... 🐛🎵",
+				"Test coverage: Aiming for the stars! ⭐📊",
+				"Quality assurance: Because YOLO isn't a strategy! 🎯✅",
+				"Debugging: Being a detective for your own crimes! 🕵️‍♂️🔍",
+			},
+			Probability: 0.12,
+		},
+		{
+			ID: "ai_commands",
+			Condition: func(ctx *EasterEggContext) bool {
+				cmd := strings.ToLower(ctx.LastCommand)
+				return strings.Contains(cmd, "chatgpt") || strings.Contains(cmd, "claude") ||
+					strings.Contains(cmd, "copilot") || strings.Contains(cmd, "ai") ||
+					strings.Contains(cmd, "gpt") || strings.Contains(cmd, "llm")
+			},
+			Messages: []string{
+				"AI assistant detected! Hello, fellow digital being! 🤖👋",
+				"Humans and AI, coding together! 🤝💻",
+				"The future is collaborative! 🚀🤖",
+				"AI: Artificial Intelligence or Actually Intelligent? 🧠✨",
+				"Prompt engineering: The new coding skill! 💬⚡",
+				"Beep boop: AI translation successful! 🤖🔄",
+			},
+			Probability: 0.08,
 		},
 	}
 }
 
 // FormatEasterEggMessage formats the easter egg message with proper styling
 func FormatEasterEggMessage(message string) string {
+	// Check terminal capabilities for enhanced formatting
+	termProgram := strings.ToLower(os.Getenv("TERM_PROGRAM"))
+	colorterm := os.Getenv("COLORTERM")
+
+	// Enhanced formatting for modern terminals
+	if termProgram == "warp" || termProgram == "iterm.app" || termProgram == "vscode" ||
+		termProgram == "alacritty" || termProgram == "kitty" || termProgram == "hyper" ||
+		colorterm == "truecolor" {
+		// Use enhanced formatting with better spacing and colors
+		return fmt.Sprintf("\n\033[38;5;214m🥚\033[0m \033[1m%s\033[0m\n", message)
+	}
+
+	// Fallback for basic terminals
 	return fmt.Sprintf("\n🥚 %s\n", message)
 }
 
@@ -475,4 +616,66 @@ func (eem *EasterEggManager) GetRandomMotivationalQuote() string {
 		"Persistence beats resistance! Keep coding! 💪⚡",
 	}
 	return quotes[eem.rand.Intn(len(quotes))]
+}
+
+// IsModernTerminal checks if the current terminal supports modern features
+func IsModernTerminal() bool {
+	termProgram := strings.ToLower(os.Getenv("TERM_PROGRAM"))
+	termProgramVersion := os.Getenv("TERM_PROGRAM_VERSION")
+	colorterm := os.Getenv("COLORTERM")
+	term := strings.ToLower(os.Getenv("TERM"))
+
+	// Check for modern terminal emulators
+	modernTerminals := []string{
+		"warp",      // Warp Terminal
+		"iterm.app", // iTerm2
+		"vscode",    // VS Code Terminal
+		"alacritty", // Alacritty
+		"kitty",     // Kitty
+		"hyper",     // Hyper
+		"tabby",     // Tabby
+		"terminus",  // Terminus
+		"rio",       // Rio Terminal
+	}
+
+	for _, modern := range modernTerminals {
+		if termProgram == modern {
+			return true
+		}
+	}
+
+	// Check for Windows Terminal
+	if os.Getenv("WT_SESSION") != "" {
+		return true
+	}
+
+	// Check for Terminal.app (macOS) with recent versions
+	if termProgram == "apple_terminal" && termProgramVersion != "" {
+		return true
+	}
+
+	// Check for truecolor support
+	if colorterm == "truecolor" || colorterm == "24bit" {
+		return true
+	}
+
+	// Check for 256-color terminals
+	if strings.Contains(term, "256color") {
+		return true
+	}
+
+	return false
+}
+
+// GetTerminalInfo returns information about the current terminal
+func GetTerminalInfo() map[string]string {
+	return map[string]string{
+		"TERM":                 os.Getenv("TERM"),
+		"TERM_PROGRAM":         os.Getenv("TERM_PROGRAM"),
+		"TERM_PROGRAM_VERSION": os.Getenv("TERM_PROGRAM_VERSION"),
+		"COLORTERM":            os.Getenv("COLORTERM"),
+		"WT_SESSION":           os.Getenv("WT_SESSION"),
+		"ITERM_PROFILE":        os.Getenv("ITERM_PROFILE"),
+		"ITERM_SESSION_ID":     os.Getenv("ITERM_SESSION_ID"),
+	}
 }

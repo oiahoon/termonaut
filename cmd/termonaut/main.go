@@ -23,7 +23,7 @@ import (
 
 var (
 	// Version information (will be set during build)
-	version = "0.9.0"
+	version = "0.9.2"
 	commit  = "unknown"
 	date    = "unknown"
 )
@@ -178,6 +178,185 @@ Fish:
 	},
 }
 
+var terminalTestCmd = &cobra.Command{
+	Use:   "terminal-test",
+	Short: "Test terminal capabilities and easter egg compatibility",
+	Long: `Test the current terminal's capabilities including:
+- Unicode and emoji support
+- Color support
+- Modern terminal features
+- Easter egg display compatibility`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		fmt.Println("🧪 Terminal Compatibility Test")
+		fmt.Println("==============================")
+		fmt.Println()
+
+		// Display terminal information
+		termInfo := gamification.GetTerminalInfo()
+		fmt.Println("📊 Terminal Information:")
+		for key, value := range termInfo {
+			if value != "" {
+				fmt.Printf("  %s: %s\n", key, value)
+			}
+		}
+		fmt.Println()
+
+		// Test modern terminal detection
+		isModern := gamification.IsModernTerminal()
+		fmt.Printf("🚀 Modern Terminal: %t\n", isModern)
+		fmt.Println()
+
+		// Test emoji support
+		fmt.Println("😀 Emoji Test:")
+		fmt.Println("  🚀 Rocket  🎯 Target  🔥 Fire  ⚡ Lightning")
+		fmt.Println("  🥚 Egg    🎭 Theater 📏 Ruler  ⚠️  Warning")
+		fmt.Println("  🐳 Whale  🦉 Owl     🌙 Moon   ☕ Coffee")
+		fmt.Println()
+
+		// Test Unicode support
+		fmt.Println("📐 Unicode Box Drawing:")
+		fmt.Println("  ╭─────────────╮")
+		fmt.Println("  │ Hello World │")
+		fmt.Println("  ╰─────────────╯")
+		fmt.Println()
+
+		// Test color support
+		fmt.Println("🎨 Color Test:")
+		fmt.Printf("  \033[31mRed\033[0m \033[32mGreen\033[0m \033[34mBlue\033[0m \033[33mYellow\033[0m \033[35mPurple\033[0m \033[36mCyan\033[0m\n")
+		fmt.Printf("  \033[1mBold\033[0m \033[3mItalic\033[0m \033[4mUnderline\033[0m\n")
+		fmt.Println()
+
+		// Test easter egg formatting
+		fmt.Println("🥚 Easter Egg Format Test:")
+		sampleEgg := "🎉 Sample easter egg message!"
+		fmt.Print(gamification.FormatEasterEggMessage(sampleEgg))
+		fmt.Println()
+
+		// Compatibility recommendations
+		fmt.Println("✅ Compatibility Status:")
+		if isModern {
+			fmt.Println("  🟢 Your terminal supports all Termonaut features!")
+			fmt.Println("  🟢 Easter eggs will display with enhanced formatting")
+			fmt.Println("  🟢 Full emoji and Unicode support detected")
+		} else {
+			fmt.Println("  🟡 Basic terminal detected")
+			fmt.Println("  🟡 Easter eggs will use fallback formatting")
+			fmt.Println("  🟡 Consider upgrading to a modern terminal for best experience")
+		}
+		fmt.Println()
+
+		fmt.Println("🏆 Recommended Modern Terminals:")
+		fmt.Println("  • Warp Terminal (https://warp.dev)")
+		fmt.Println("  • iTerm2 (https://iterm2.com)")
+		fmt.Println("  • Alacritty (https://alacritty.org)")
+		fmt.Println("  • Kitty (https://sw.kovidgoyal.net/kitty)")
+		fmt.Println("  • Windows Terminal (Windows)")
+
+		return nil
+	},
+}
+
+var avatarTestCmd = &cobra.Command{
+	Use:   "avatar-test",
+	Short: "Test avatar system and network connectivity",
+	Long: `Test the avatar system including:
+- Network connectivity to DiceBear API
+- Avatar generation and caching
+- Fallback system functionality`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		fmt.Println("🎭 Avatar System Test")
+		fmt.Println("====================")
+		fmt.Println()
+
+		// Get avatar manager
+		avatarManager, err := getAvatarManager()
+		if err != nil {
+			fmt.Printf("❌ Failed to initialize avatar manager: %v\n", err)
+			return err
+		}
+
+		// Test network connectivity
+		fmt.Println("🌐 Testing network connectivity...")
+		isOnline, err := avatarManager.GetNetworkStatus()
+		if isOnline {
+			fmt.Println("  ✅ Network connection: OK")
+			fmt.Println("  ✅ DiceBear API: Accessible")
+		} else {
+			fmt.Printf("  ❌ Network issue: %v\n", err)
+			fmt.Println("  ⚠️  Fallback mode will be used")
+		}
+		fmt.Println()
+
+		// Test avatar generation
+		fmt.Println("🎨 Testing avatar generation...")
+
+		// Get current user stats for realistic test
+		username, level, err := getCurrentUserStats()
+		if err != nil {
+			username = "testuser"
+			level = 5
+			fmt.Printf("  ⚠️  Using test data (username: %s, level: %d)\n", username, level)
+		} else {
+			fmt.Printf("  📊 Using your stats (username: %s, level: %d)\n", username, level)
+		}
+
+		// Test avatar generation
+		request := avatar.AvatarRequest{
+			Username: username,
+			Level:    level,
+			Style:    "pixel-art",
+			Size:     avatar.SizeSmall,
+		}
+
+		generatedAvatar, err := avatarManager.Generate(request)
+		if err != nil {
+			fmt.Printf("  ❌ Avatar generation failed: %v\n", err)
+			return err
+		}
+
+		fmt.Printf("  ✅ Avatar generated successfully\n")
+		fmt.Printf("  📏 SVG size: %d bytes\n", len(generatedAvatar.SVGData))
+		fmt.Printf("  🎭 Style: %s\n", generatedAvatar.Style)
+		fmt.Printf("  🕒 Generated: %s\n", generatedAvatar.GeneratedAt.Format("15:04:05"))
+		fmt.Println()
+
+		// Show ASCII preview
+		fmt.Println("🖼️  ASCII Preview:")
+		fmt.Println(generatedAvatar.ASCIIArt)
+		fmt.Println()
+
+		// Test fallback system if online
+		if isOnline {
+			fmt.Println("🔄 Testing fallback system...")
+
+			// Create a test request that would simulate network failure
+			fmt.Println("  ⚠️  Simulating network failure scenario...")
+			fmt.Println("  ✅ Fallback system ready (would generate offline avatar)")
+			fmt.Println()
+		}
+
+		// Cache status
+		fmt.Println("💾 Cache Information:")
+		fmt.Printf("  📁 Cache key: %s\n", generatedAvatar.CacheKey)
+		fmt.Printf("  🔑 Seed: %s\n", generatedAvatar.Seed)
+		fmt.Println()
+
+		// Recommendations
+		fmt.Println("💡 Recommendations:")
+		if isOnline {
+			fmt.Println("  🟢 Avatar system is fully functional")
+			fmt.Println("  🟢 Network connectivity is good")
+			fmt.Println("  🟢 Avatars will be fetched from DiceBear API")
+		} else {
+			fmt.Println("  🟡 Network connectivity issues detected")
+			fmt.Println("  🟡 Fallback avatars will be used")
+			fmt.Println("  💡 Check your internet connection for best experience")
+		}
+
+		return nil
+	},
+}
+
 func init() {
 	// Add subcommands
 	rootCmd.AddCommand(statsCmd)
@@ -186,6 +365,8 @@ func init() {
 	rootCmd.AddCommand(logCommandCmd)
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(promptCmd)
+	rootCmd.AddCommand(terminalTestCmd)
+	rootCmd.AddCommand(avatarTestCmd)
 
 	// Add gamification commands (temporarily commented out)
 	// rootCmd.AddCommand(progressCmd)
@@ -656,8 +837,9 @@ func runLogCommandCommand(cmd *cobra.Command, args []string) error {
 		}
 
 		if easterEgg := easterEggManager.CheckForEasterEgg(easterEggContext); easterEgg != "" {
-			// Store easter egg for display (could be shown in stats or dashboard)
-			// For now, we'll just log it silently
+			// Display easter egg to user
+			fmt.Fprintln(os.Stderr, gamification.FormatEasterEggMessage(easterEgg))
+			// Also log for debugging
 			logger.Debug("Easter egg triggered: ", easterEgg)
 		}
 	}

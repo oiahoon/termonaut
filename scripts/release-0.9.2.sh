@@ -89,14 +89,14 @@ if [[ "$CURRENT_OS" == "darwin" ]]; then
     CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build -ldflags="${LDFLAGS}" -o dist/termonaut-${VERSION}-darwin-arm64 cmd/termonaut/*.go
 fi
 
-# Linux builds (cross-compile)
-if command -v docker &> /dev/null; then
-    echo -e "Building for Linux (x64)..."
-    CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -ldflags="${LDFLAGS}" -o dist/termonaut-${VERSION}-linux-amd64 cmd/termonaut/*.go
-
-    echo -e "Building for Linux (ARM64)..."
-    CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -ldflags="${LDFLAGS}" -o dist/termonaut-${VERSION}-linux-arm64 cmd/termonaut/*.go
-fi
+# Linux builds (cross-compile) - Skip for now due to CGO issues
+# if command -v docker &> /dev/null; then
+#     echo -e "Building for Linux (x64)..."
+#     CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -ldflags="${LDFLAGS}" -o dist/termonaut-${VERSION}-linux-amd64 cmd/termonaut/*.go
+#
+#     echo -e "Building for Linux (ARM64)..."
+#     CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -ldflags="${LDFLAGS}" -o dist/termonaut-${VERSION}-linux-arm64 cmd/termonaut/*.go
+# fi
 
 echo -e "${GREEN}✅ All binaries built successfully${NC}"
 

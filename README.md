@@ -229,19 +229,61 @@ Unlock badges as you progress:
 
 ## 🔧 Advanced Features
 
-### GitHub Badge Integration
+### 🔄 GitHub Integration & Sync
 
-Display your terminal stats on GitHub:
+Automatically sync your terminal stats to GitHub and display dynamic badges:
 
-1. Enable sync in config: `termonaut config set sync_enabled true`
-2. Set your repository: `termonaut config set sync_repo username/profile`
-3. Add badges to your README:
+#### Quick Setup
+```bash
+# Interactive setup (recommended)
+termonaut github sync setup
 
-```markdown
-![Commands](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/username/profile/main/badges/commands.json)
-![Level](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/username/profile/main/badges/level.json)
-![Streak](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/username/profile/main/badges/streak.json)
+# Or manual configuration:
+termonaut config set sync_enabled true
+termonaut config set sync_repo username/termonaut-profile
+termonaut config set badge_update_frequency daily
 ```
+
+#### Manual & Automatic Sync
+```bash
+# Manual sync (immediate)
+termonaut github sync now
+
+# Check sync status
+termonaut github sync status
+
+# View available commands
+termonaut github --help
+```
+
+#### Generate Dynamic Badges
+```bash
+# Generate all badges
+termonaut github badges generate
+
+# Generate profile
+termonaut github profile generate
+
+# Setup GitHub Actions for automation
+termonaut github actions generate termonaut-stats-update
+```
+
+#### Add Badges to Your README
+```markdown
+![Commands](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/username/termonaut-profile/main/badges/commands.json)
+![Level](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/username/termonaut-profile/main/badges/level.json)
+![Streak](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/username/termonaut-profile/main/badges/streak.json)
+![Productivity](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/username/termonaut-profile/main/badges/productivity.json)
+![Last Active](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/username/termonaut-profile/main/badges/last-active.json)
+```
+
+#### Sync Features
+- **🔄 Automatic Sync**: Background sync based on frequency (hourly/daily/weekly)
+- **📊 Profile Generation**: Complete productivity profiles in Markdown
+- **🏷️ Dynamic Badges**: 5+ badge types with real-time data
+- **📈 Heatmaps**: Visual activity heatmaps (HTML/SVG/Markdown)
+- **⚡ GitHub Actions**: Automated workflows for updates
+- **🔒 Privacy**: Only syncs aggregated stats, no sensitive data
 
 ### Shell Prompt Integration
 

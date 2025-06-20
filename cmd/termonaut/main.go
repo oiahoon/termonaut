@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/oiahoon/termonaut/internal/config"
 	"github.com/oiahoon/termonaut/internal/database"
 	"github.com/oiahoon/termonaut/internal/gamification"
+	"github.com/oiahoon/termonaut/internal/github"
 	"github.com/oiahoon/termonaut/internal/privacy"
 	"github.com/oiahoon/termonaut/internal/shell"
 	"github.com/oiahoon/termonaut/internal/stats"
@@ -201,7 +201,6 @@ func init() {
 	rootCmd.AddCommand(dashboardCmd)
 	rootCmd.AddCommand(tuiCmd)
 	rootCmd.AddCommand(createAdvancedCmd())
-	rootCmd.AddCommand(createGitHubCmd())
 
 	// Add completion command
 	completionCmd := &cobra.Command{
@@ -620,6 +619,20 @@ func runLogCommandCommand(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	// Trigger automatic sync if enabled
+	if cfg.SyncEnabled && cfg.SyncRepo != "" {
+		// Get updated user progress after command storage
+		userProgress, err := db.GetUserProgress()
+		if err == nil {
+			// Initialize sync manager and attempt scheduled sync
+			statsCalc := stats.New(db)
+			syncManager := github.NewSyncManager(cfg, statsCalc)
+
+			// This will only sync if it's time based on frequency
+			syncManager.ScheduleSync(userProgress)
+		}
+	}
+
 	return nil
 }
 
@@ -798,249 +811,6 @@ func hasUnmatchedQuotes(command string) bool {
 }
 
 // createGitHubCmd creates the GitHub command and its subcommands
-func createGitHubCmd() *cobra.Command {
-	githubCmd := &cobra.Command{
-		Use:   "github",
-		Short: "GitHub integration commands",
-		Long:  "GitHub integration for badges, profiles, and social sharing.",
-	}
-
-	// Badges subcommand
-	githubBadgesCmd := &cobra.Command{
-		Use:   "badges",
-		Short: "Generate GitHub badges",
-		Long:  "Generate dynamic badges for your GitHub profile.",
-	}
-
-	githubBadgesGenerateCmd := &cobra.Command{
-		Use:   "generate",
-		Short: "Generate badges",
-		Long:  "Generate badges showing your terminal stats.",
-		RunE:  runGitHubBadgesGenerateCommand,
-	}
-
-	// Profile subcommand
-	githubProfileCmd := &cobra.Command{
-		Use:   "profile",
-		Short: "Generate GitHub profile",
-		Long:  "Generate a comprehensive profile for your GitHub README.",
-	}
-
-	githubProfileGenerateCmd := &cobra.Command{
-		Use:   "generate",
-		Short: "Generate profile",
-		Long:  "Generate a profile markdown for your GitHub README.",
-		RunE:  runGitHubProfileGenerateCommand,
-	}
-
-	// Actions subcommand
-	githubActionsCmd := &cobra.Command{
-		Use:   "actions",
-		Short: "GitHub Actions workflows",
-		Long:  "Generate and manage GitHub Actions workflows for automation.",
-	}
-
-	githubActionsGenerateCmd := &cobra.Command{
-		Use:   "generate [workflow-name]",
-		Short: "Generate workflow file",
-		Long:  "Generate a GitHub Actions workflow file for automation.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  runGitHubActionsGenerateCommand,
-	}
-
-	githubActionsListCmd := &cobra.Command{
-		Use:   "list",
-		Short: "List available workflows",
-		Long:  "List all available GitHub Actions workflow templates.",
-		RunE:  runGitHubActionsListCommand,
-	}
-
-	// Build command hierarchy
-	githubBadgesCmd.AddCommand(githubBadgesGenerateCmd)
-	githubProfileCmd.AddCommand(githubProfileGenerateCmd)
-	githubActionsCmd.AddCommand(githubActionsGenerateCmd)
-	githubActionsCmd.AddCommand(githubActionsListCmd)
-
-	githubCmd.AddCommand(githubBadgesCmd)
-	githubCmd.AddCommand(githubProfileCmd)
-	githubCmd.AddCommand(githubActionsCmd)
-
-	// Add flags
-	githubBadgesGenerateCmd.Flags().String("format", "url", "Output format (url, json, markdown)")
-	githubBadgesGenerateCmd.Flags().String("output", "", "Output file path")
-	githubProfileGenerateCmd.Flags().String("format", "markdown", "Output format (markdown, json)")
-	githubProfileGenerateCmd.Flags().String("output", "", "Output file path")
-
-	return githubCmd
-}
-
-func runGitHubBadgesGenerateCommand(cmd *cobra.Command, args []string) error {
-	// Load configuration
-	cfg, err := config.Load()
-	if err != nil {
-		return fmt.Errorf("failed to load config: %w", err)
-	}
-
-	// Initialize components
-	logger := setupLogger(cfg.LogLevel)
-	db, err := database.New(config.GetDataDir(cfg), logger)
-	if err != nil {
-		return fmt.Errorf("failed to initialize database: %w", err)
-	}
-	defer db.Close()
-
-	// Get stats and user progress
-	statsCalc := stats.New(db)
-	basicStats, err := statsCalc.GetBasicStats()
-	if err != nil {
-		return fmt.Errorf("failed to get stats: %w", err)
-	}
-
-	userProgress, err := db.GetUserProgress()
-	if err != nil {
-		return fmt.Errorf("failed to get user progress: %w", err)
-	}
-
-	// Generate badges
-	badges := generateBadgeURLs(basicStats, userProgress)
-
-	// Get flags
-	format, _ := cmd.Flags().GetString("format")
-	output, _ := cmd.Flags().GetString("output")
-
-	// Format output
-	var result string
-	switch format {
-	case "json":
-		result = formatBadgesJSON(badges)
-	case "markdown":
-		result = formatBadgesMarkdown(badges)
-	default:
-		result = formatBadgesURL(badges)
-	}
-
-	// Output or save
-	if output != "" {
-		return os.WriteFile(output, []byte(result), 0644)
-	}
-
-	fmt.Print(result)
-	return nil
-}
-
-func runGitHubProfileGenerateCommand(cmd *cobra.Command, args []string) error {
-	// Load configuration
-	cfg, err := config.Load()
-	if err != nil {
-		return fmt.Errorf("failed to load config: %w", err)
-	}
-
-	// Initialize components
-	logger := setupLogger(cfg.LogLevel)
-	db, err := database.New(config.GetDataDir(cfg), logger)
-	if err != nil {
-		return fmt.Errorf("failed to initialize database: %w", err)
-	}
-	defer db.Close()
-
-	// Get stats and user progress
-	statsCalc := stats.New(db)
-	basicStats, err := statsCalc.GetBasicStats()
-	if err != nil {
-		return fmt.Errorf("failed to get stats: %w", err)
-	}
-
-	userProgress, err := db.GetUserProgress()
-	if err != nil {
-		return fmt.Errorf("failed to get user progress: %w", err)
-	}
-
-	// Generate profile
-	profile := generateProfileMarkdown(basicStats, userProgress)
-
-	// Get flags
-	format, _ := cmd.Flags().GetString("format")
-	output, _ := cmd.Flags().GetString("output")
-
-	// Format output
-	var result string
-	switch format {
-	case "json":
-		result = formatProfileJSON(basicStats, userProgress)
-	default:
-		result = profile
-	}
-
-	// Output or save
-	if output != "" {
-		return os.WriteFile(output, []byte(result), 0644)
-	}
-
-	fmt.Print(result)
-	return nil
-}
-
-func runGitHubActionsGenerateCommand(cmd *cobra.Command, args []string) error {
-	workflowName := args[0]
-
-	// Available workflows
-	workflows := map[string]string{
-		"termonaut-stats-update":  generateStatsUpdateWorkflow(),
-		"termonaut-profile-sync":  generateProfileSyncWorkflow(),
-		"termonaut-weekly-report": generateWeeklyReportWorkflow(),
-	}
-
-	workflow, exists := workflows[workflowName]
-	if !exists {
-		return fmt.Errorf("unknown workflow: %s", workflowName)
-	}
-
-	// Create .github/workflows directory
-	workflowDir := ".github/workflows"
-	if err := os.MkdirAll(workflowDir, 0755); err != nil {
-		return fmt.Errorf("failed to create workflow directory: %w", err)
-	}
-
-	// Write workflow file
-	workflowFile := filepath.Join(workflowDir, workflowName+".yml")
-	if err := os.WriteFile(workflowFile, []byte(workflow), 0644); err != nil {
-		return fmt.Errorf("failed to write workflow file: %w", err)
-	}
-
-	fmt.Printf("✅ Generated workflow: %s\n", workflowFile)
-	fmt.Println()
-	fmt.Println("📋 Next steps:")
-	fmt.Println("1. Commit the workflow file to your repository")
-	fmt.Println("2. Configure any required secrets in GitHub repository settings")
-	fmt.Println("3. The workflow will run automatically based on its triggers")
-
-	return nil
-}
-
-func runGitHubActionsListCommand(cmd *cobra.Command, args []string) error {
-	fmt.Println("📋 Available GitHub Actions Workflows:")
-	fmt.Println()
-
-	workflows := []struct {
-		Name        string
-		Description string
-	}{
-		{"termonaut-stats-update", "Automatically update Termonaut badges and stats"},
-		{"termonaut-profile-sync", "Sync Termonaut profile data to repository"},
-		{"termonaut-weekly-report", "Generate weekly productivity reports"},
-	}
-
-	for _, workflow := range workflows {
-		fmt.Printf("🔧 %s\n", workflow.Name)
-		fmt.Printf("   %s\n", workflow.Description)
-		fmt.Println()
-	}
-
-	fmt.Println("💡 Generate a workflow with:")
-	fmt.Println("   tn github actions generate [workflow-name]")
-
-	return nil
-}
 
 // Helper functions for badge generation
 func generateBadgeURLs(basicStats *stats.BasicStats, userProgress *models.UserProgress) map[string]string {

@@ -301,6 +301,37 @@ var actionsGenerateCmd = &cobra.Command{
 	},
 }
 
+// syncCmd represents the sync command
+var syncCmd = &cobra.Command{
+	Use:   "sync",
+	Short: "Sync data to GitHub repository",
+	Long:  "Synchronize your Termonaut data to a configured GitHub repository.",
+}
+
+// syncNowCmd performs immediate sync
+var syncNowCmd = &cobra.Command{
+	Use:   "now",
+	Short: "Sync now",
+	Long:  "Perform an immediate sync to GitHub repository.",
+	RunE:  runGitHubSyncNowCommand,
+}
+
+// syncStatusCmd shows sync status
+var syncStatusCmd = &cobra.Command{
+	Use:   "status",
+	Short: "Show sync status",
+	Long:  "Display current sync configuration and status.",
+	RunE:  runGitHubSyncStatusCommand,
+}
+
+// syncSetupCmd sets up sync configuration
+var syncSetupCmd = &cobra.Command{
+	Use:   "setup",
+	Short: "Setup sync configuration",
+	Long:  "Interactive setup for GitHub synchronization.",
+	RunE:  runGitHubSyncSetupCommand,
+}
+
 func init() {
 	rootCmd.AddCommand(githubCmd)
 
@@ -324,4 +355,10 @@ func init() {
 	actionsCmd.AddCommand(actionsGenerateCmd)
 
 	actionsGenerateCmd.Flags().StringP("output", "o", "", "Output file (default: .github/workflows/[template-name].yml)")
+
+	// Sync commands
+	githubCmd.AddCommand(syncCmd)
+	syncCmd.AddCommand(syncNowCmd)
+	syncCmd.AddCommand(syncStatusCmd)
+	syncCmd.AddCommand(syncSetupCmd)
 }

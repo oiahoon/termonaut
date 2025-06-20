@@ -814,13 +814,59 @@ func runGitHubSyncNowCommand(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("🚀 Syncing to %s...\n", cfg.SyncRepo)
-	fmt.Println("✅ Sync feature coming soon!")
-	fmt.Println("📋 For now, use the GitHub commands:")
-	fmt.Println("• tn github badges generate")
-	fmt.Println("• tn github profile generate")
-	fmt.Println("• tn github actions generate termonaut-stats-update")
+
+	// Initialize database and sync manager
+	db, err := initAdvancedDB()
+	if err != nil {
+		return fmt.Errorf("failed to initialize database: %w", err)
+	}
+	defer db.Close()
+
+	statsCalc := stats.New(db)
+	syncManager := github.NewSyncManager(cfg, statsCalc)
+
+	// Get user progress
+	userProgress, err := db.GetUserProgress()
+	if err != nil {
+		return fmt.Errorf("failed to get user progress: %w", err)
+	}
+
+	// Perform sync
+	result, err := syncManager.SyncToRepository(userProgress)
+	if err != nil {
+		fmt.Printf("❌ Sync failed: %v\n", err)
+		return err
+	}
+
+	// Save sync result for status tracking
+	lastSyncFile := filepath.Join(config.GetDataDir(cfg), "last_sync.json")
+	if saveErr := saveLastSyncResult(lastSyncFile, result); saveErr != nil {
+		fmt.Printf("⚠️  Warning: Failed to save sync status: %v\n", saveErr)
+	}
+
+	// Display results
+	fmt.Printf("✅ Sync successful!\n")
+	fmt.Printf("📁 Files updated: %d\n", len(result.FilesUpdated))
+	for _, file := range result.FilesUpdated {
+		fmt.Printf("   • %s\n", file)
+	}
+	fmt.Printf("🏷️  Badges updated: %d\n", result.BadgesUpdated)
+	fmt.Printf("📄 Profile size: %d bytes\n", result.ProfileSize)
+	fmt.Printf("⏱️  Duration: %s\n", result.SyncDuration)
+	if result.CommitHash != "" {
+		fmt.Printf("🔗 Commit: %s\n", result.CommitHash[:8])
+	}
 
 	return nil
+}
+
+// saveLastSyncResult saves the sync result to a file for status tracking
+func saveLastSyncResult(lastSyncFile string, result *github.SyncResult) error {
+	data, err := json.MarshalIndent(result, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(lastSyncFile, data, 0644)
 }
 
 func runGitHubSyncStatusCommand(cmd *cobra.Command, args []string) error {

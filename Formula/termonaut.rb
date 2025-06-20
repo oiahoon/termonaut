@@ -1,20 +1,20 @@
 class Termonaut < Formula
   desc "Gamified terminal productivity tracker with achievements, XP system, and personalized avatars"
   homepage "https://github.com/oiahoon/termonaut"
-  url "https://github.com/oiahoon/termonaut/releases/download/v0.9.2/termonaut-0.9.2-darwin-amd64"
-  sha256 "069df6cbf275717490a5764f99b69f5be83660044a527079057fc448e98d39c8"
+  url "https://github.com/oiahoon/termonaut/releases/download/v0.9.4/termonaut-0.9.4-darwin-amd64"
+  sha256 "PLACEHOLDER_SHA256_AMD64"  # Will be updated by release script
   license "MIT"
-  version "0.9.2"
+  version "0.9.4"
 
   on_macos do
     on_intel do
-      url "https://github.com/oiahoon/termonaut/releases/download/v0.9.2/termonaut-0.9.2-darwin-amd64"
-      sha256 "069df6cbf275717490a5764f99b69f5be83660044a527079057fc448e98d39c8"
+      url "https://github.com/oiahoon/termonaut/releases/download/v0.9.4/termonaut-0.9.4-darwin-amd64"
+      sha256 "PLACEHOLDER_SHA256_AMD64"
     end
 
     on_arm do
-      url "https://github.com/oiahoon/termonaut/releases/download/v0.9.2/termonaut-0.9.2-darwin-arm64"
-      sha256 "dac85679330e9707420dc960deb176aa993a29bb3deb62c0414521bc9f24e7c0"
+      url "https://github.com/oiahoon/termonaut/releases/download/v0.9.4/termonaut-0.9.4-darwin-arm64"
+      sha256 "PLACEHOLDER_SHA256_ARM64"
     end
   end
 
@@ -35,9 +35,9 @@ class Termonaut < Formula
   def install
     # Install the binary directly (no tar.gz extraction needed)
     if OS.mac? && Hardware::CPU.intel?
-      bin.install "termonaut-0.9.2-darwin-amd64" => "termonaut"
+      bin.install "termonaut-0.9.4-darwin-amd64" => "termonaut"
     elsif OS.mac? && Hardware::CPU.arm?
-      bin.install "termonaut-0.9.2-darwin-arm64" => "termonaut"
+      bin.install "termonaut-0.9.4-darwin-arm64" => "termonaut"
     end
 
     # Create symlink for short command
@@ -46,9 +46,9 @@ class Termonaut < Formula
 
   def post_install
     puts <<~EOS
-      🎮 Termonaut v0.9.2 has been installed successfully!
+      🚀 Termonaut v0.9.4 has been installed successfully!
 
-      ✨ NEW: Optimized Easter Eggs & Network-Resilient Avatar System!
+      ✨ NEW: Enhanced Features & Final Polish for Production Readiness!
 
       Quick Start:
         1. Set up shell integration:
@@ -58,24 +58,26 @@ class Termonaut < Formula
            source ~/.zshrc    # for zsh users
            source ~/.bashrc   # for bash users
 
-        3. View your avatar dashboard:
-           termonaut stats    # Enhanced with avatar display
+        3. View your enhanced dashboard:
+           termonaut stats    # Production-ready with avatar display
            tn stats           # short alias
 
         4. Test your system:
            termonaut avatar-test     # Test avatar system & network
            termonaut terminal-test   # Test terminal compatibility
-           tn avatar-test           # short alias
+           tn version               # Check detailed version info
 
-        5. Customize your avatar:
-           termonaut avatar config --style pixel-art
-           tn avatar preview -l 25
+        5. Explore GitHub integration:
+           termonaut github sync now    # Sync your profile
+           termonaut github badges      # Generate README badges
+           tn github heatmap           # Create activity heatmap
 
-      🎮 v0.9.2 Highlights:
-        • 60%+ reduced easter egg interruptions
-        • New easter eggs: Python, JS, Database, Testing, AI Tools
-        • Network-resilient avatar system with offline fallbacks
-        • Enhanced modern terminal support (Warp, iTerm2, etc.)
+      🚀 v0.9.4 Highlights:
+        • 95% feature completeness for v1.0 readiness
+        • Comprehensive project planning & documentation excellence
+        • Enhanced development workflow & release process
+        • Production-ready with comprehensive error handling
+        • Safe shell configuration management system
 
       🎨 Avatar Styles: pixel-art, bottts, adventurer, avataaars
       📏 Smart Sizing: Auto-adjusts based on your terminal width

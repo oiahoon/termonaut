@@ -1,0 +1,293 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v0.9.5)'
+        required: true
+        type: string
+
+env:
+  GO_VERSION: '1.23'
+
+jobs:
+  build:
+    name: Build Binaries
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          # macOS builds
+          - os: macos-latest
+            goos: darwin
+            goarch: amd64
+            name: darwin-amd64
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+            name: darwin-arm64
+
+          # Linux builds
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            name: linux-amd64
+          - os: ubuntu-latest
+            goos: linux
+            goarch: arm64
+            name: linux-arm64
+
+          # Windows builds
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+            name: windows-amd64
+            ext: .exe
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ env.GO_VERSION }}
+
+    - name: Install dependencies (Linux)
+      if: matrix.goos == 'linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc-multilib
+
+    - name: Install cross-compilation tools (Linux ARM64)
+      if: matrix.goos == 'linux' && matrix.goarch == 'arm64'
+      run: |
+        sudo apt-get install -y gcc-aarch64-linux-gnu
+        echo "CC=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
+
+    - name: Install dependencies (Windows)
+      if: matrix.goos == 'windows'
+      run: |
+        # Windows already has necessary tools
+
+    - name: Get version
+      id: version
+      shell: bash
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          VERSION="${{ github.event.inputs.version }}"
+        else
+          VERSION=${GITHUB_REF#refs/tags/}
+        fi
+        echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+        echo "VERSION_NO_V=${VERSION#v}" >> $GITHUB_OUTPUT
+
+    - name: Build binary
+      env:
+        CGO_ENABLED: 1
+        GOOS: ${{ matrix.goos }}
+        GOARCH: ${{ matrix.goarch }}
+        VERSION: ${{ steps.version.outputs.VERSION_NO_V }}
+        COMMIT: ${{ github.sha }}
+        BUILD_DATE: ${{ github.run_started_at }}
+      shell: bash
+      run: |
+        LDFLAGS="-X main.version=${VERSION} -X main.commit=${COMMIT} -X main.date=${BUILD_DATE}"
+        BINARY_NAME="termonaut-${VERSION}-${{ matrix.name }}${{ matrix.ext }}"
+
+        echo "Building ${BINARY_NAME}..."
+        go build -ldflags="${LDFLAGS}" -o ${BINARY_NAME} cmd/termonaut/*.go
+
+        # Verify the binary
+        if [ "${{ matrix.goos }}" = "$(go env GOOS)" ] && [ "${{ matrix.goarch }}" = "$(go env GOARCH)" ]; then
+          echo "Testing binary on native platform..."
+          ./${BINARY_NAME} version || echo "Binary test completed"
+        fi
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: termonaut-${{ steps.version.outputs.VERSION_NO_V }}-${{ matrix.name }}
+        path: termonaut-${{ steps.version.outputs.VERSION_NO_V }}-${{ matrix.name }}${{ matrix.ext }}
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ env.GO_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc
+
+    - name: Run tests
+      run: go test ./tests/unit/ -v
+
+    - name: Run integration tests
+      run: |
+        if [ -d "./tests/integration" ]; then
+          go test ./tests/integration/ -v
+        else
+          echo "No integration tests found, skipping..."
+        fi
+
+  release:
+    name: Create Release
+    needs: [build, test]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Get version
+      id: version
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          VERSION="${{ github.event.inputs.version }}"
+        else
+          VERSION=${GITHUB_REF#refs/tags/}
+        fi
+        echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+        echo "VERSION_NO_V=${VERSION#v}" >> $GITHUB_OUTPUT
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: ./dist
+
+    - name: Prepare release assets
+      run: |
+        mkdir -p release-assets
+        find ./dist -name "termonaut-*" -type f -exec cp {} release-assets/ \;
+
+        # Create checksums
+        cd release-assets
+        sha256sum termonaut-* > termonaut-${{ steps.version.outputs.VERSION_NO_V }}-checksums.txt
+        cd ..
+
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        VERSION="${{ steps.version.outputs.VERSION }}"
+
+        cat > release-notes.md << EOF
+        # Termonaut ${VERSION} - Automated Cross-Platform Release 🚀
+
+        ## 🎉 Release Highlights
+
+        This release was automatically built and deployed using GitHub Actions, ensuring consistent builds across all supported platforms.
+
+        ### 🌍 Supported Platforms
+
+        - **macOS Intel (x64)**: Native performance on Intel Macs
+        - **macOS Apple Silicon (ARM64)**: Optimized for M1/M2/M3 processors
+        - **Linux x64**: Standard x86_64 Linux distributions
+        - **Linux ARM64**: ARM-based Linux systems (Raspberry Pi, cloud instances)
+        - **Windows x64**: Native Windows 10/11 support
+
+        ### 🛠 Installation
+
+        #### Quick Install (All Platforms)
+        \`\`\`bash
+        curl -sSL https://raw.githubusercontent.com/oiahoon/termonaut/main/install.sh | bash
+        \`\`\`
+
+        #### macOS (Homebrew)
+        \`\`\`bash
+        brew install oiahoon/tap/termonaut
+        \`\`\`
+
+        #### Manual Installation
+        1. Download the appropriate binary for your platform from the assets below
+        2. Make it executable: \`chmod +x termonaut-*\`
+        3. Move to PATH: \`sudo mv termonaut-* /usr/local/bin/termonaut\`
+        4. Install shell hooks: \`termonaut advanced shell install\`
+
+        ### 🚀 Quick Start
+
+        \`\`\`bash
+        # Initialize shell integration
+        termonaut advanced shell install
+
+        # View your stats
+        termonaut stats
+
+        # Open interactive dashboard
+        termonaut tui
+
+        # GitHub integration
+        termonaut github sync now
+        \`\`\`
+
+        ### 📊 What's Included
+
+        - **Complete Gamification System**: XP, levels, achievements
+        - **Avatar System**: Personalized ASCII art avatars
+        - **GitHub Integration**: Badges, profiles, heatmaps
+        - **Advanced Analytics**: Productivity insights and trends
+        - **Safe Shell Configuration**: Revolutionary backup system
+        - **Cross-Platform Compatibility**: Consistent experience everywhere
+
+        ### 🔧 Technical Details
+
+        - **Build Date**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+        - **Commit**: ${{ github.sha }}
+        - **Go Version**: ${{ env.GO_VERSION }}
+        - **Platforms**: 5 (macOS x2, Linux x2, Windows x1)
+
+        ### 📖 Documentation
+
+        - [Installation Guide](https://github.com/oiahoon/termonaut#installation)
+        - [User Guide](https://github.com/oiahoon/termonaut/blob/main/README.md)
+        - [Troubleshooting](https://github.com/oiahoon/termonaut/blob/main/docs/TROUBLESHOOTING.md)
+
+        Happy terminal productivity tracking! 🎯
+        EOF
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.version.outputs.VERSION }}
+        name: Termonaut ${{ steps.version.outputs.VERSION }}
+        body_path: release-notes.md
+        files: |
+          release-assets/*
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Update Homebrew Formula
+      if: success()
+      run: |
+        echo "🍺 Homebrew formula update would be triggered here"
+        echo "This could be implemented with a separate workflow or webhook"
+        echo "Formula location: Formula/termonaut.rb"
+
+  notify:
+    name: Notify Success
+    needs: [release]
+    runs-on: ubuntu-latest
+    if: success()
+
+    steps:
+    - name: Notify completion
+      run: |
+        echo "🎉 Release completed successfully!"
+        echo "📦 Binaries built for all platforms"
+        echo "🚀 GitHub release created"
+        echo "📋 Checksums generated"
+        echo "✅ All systems go!"

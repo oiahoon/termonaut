@@ -1,0 +1,281 @@
+name: Update Homebrew Formula
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to update (e.g., v0.9.5)'
+        required: true
+        type: string
+      darwin_amd64_sha:
+        description: 'SHA256 for macOS Intel binary'
+        required: false
+        type: string
+      darwin_arm64_sha:
+        description: 'SHA256 for macOS ARM64 binary'
+        required: false
+        type: string
+
+jobs:
+  update-homebrew-tap:
+    name: Update Homebrew Tap
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout main repo
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Get release info
+      id: release_info
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          VERSION="${{ github.event.inputs.version }}"
+          DARWIN_AMD64_SHA="${{ github.event.inputs.darwin_amd64_sha }}"
+          DARWIN_ARM64_SHA="${{ github.event.inputs.darwin_arm64_sha }}"
+        else
+          VERSION="${{ github.event.release.tag_name }}"
+
+          # Download checksums file from release
+          CHECKSUMS_URL="https://github.com/oiahoon/termonaut/releases/download/${VERSION}/termonaut-${VERSION#v}-checksums.txt"
+          curl -sSL "$CHECKSUMS_URL" -o checksums.txt
+
+          # Extract SHA256 values
+          DARWIN_AMD64_SHA=$(grep "darwin-amd64" checksums.txt | cut -d' ' -f1)
+          DARWIN_ARM64_SHA=$(grep "darwin-arm64" checksums.txt | cut -d' ' -f1)
+        fi
+
+        # If SHA values are not provided and we can't get them, try to fetch from release
+        if [ -z "$DARWIN_AMD64_SHA" ] || [ -z "$DARWIN_ARM64_SHA" ]; then
+          echo "⚠️ SHA256 values not found, will be calculated from binaries"
+
+          # Download binaries to calculate SHA256
+          AMD64_URL="https://github.com/oiahoon/termonaut/releases/download/${VERSION}/termonaut-${VERSION#v}-darwin-amd64"
+          ARM64_URL="https://github.com/oiahoon/termonaut/releases/download/${VERSION}/termonaut-${VERSION#v}-darwin-arm64"
+
+          curl -sSL "$AMD64_URL" -o termonaut-darwin-amd64
+          curl -sSL "$ARM64_URL" -o termonaut-darwin-arm64
+
+          DARWIN_AMD64_SHA=$(sha256sum termonaut-darwin-amd64 | cut -d' ' -f1)
+          DARWIN_ARM64_SHA=$(sha256sum termonaut-darwin-arm64 | cut -d' ' -f1)
+        fi
+
+        echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+        echo "VERSION_NO_V=${VERSION#v}" >> $GITHUB_OUTPUT
+        echo "DARWIN_AMD64_SHA=${DARWIN_AMD64_SHA}" >> $GITHUB_OUTPUT
+        echo "DARWIN_ARM64_SHA=${DARWIN_ARM64_SHA}" >> $GITHUB_OUTPUT
+
+        echo "Updating to version: ${VERSION}"
+        echo "macOS Intel SHA256: ${DARWIN_AMD64_SHA}"
+        echo "macOS ARM64 SHA256: ${DARWIN_ARM64_SHA}"
+
+    - name: Checkout homebrew-termonaut repo
+      uses: actions/checkout@v4
+      with:
+        repository: oiahoon/homebrew-termonaut
+        token: ${{ secrets.HOMEBREW_TAP_TOKEN || secrets.GITHUB_TOKEN }}
+        path: homebrew-tap
+
+    - name: Update termonaut.rb formula
+      run: |
+        VERSION="${{ steps.release_info.outputs.VERSION }}"
+        VERSION_NO_V="${{ steps.release_info.outputs.VERSION_NO_V }}"
+        DARWIN_AMD64_SHA="${{ steps.release_info.outputs.DARWIN_AMD64_SHA }}"
+        DARWIN_ARM64_SHA="${{ steps.release_info.outputs.DARWIN_ARM64_SHA }}"
+
+        cd homebrew-tap
+
+        # Create updated formula
+        cat > termonaut.rb << EOF
+        class Termonaut < Formula
+          desc "Gamified terminal productivity tracker with XP, achievements, and GitHub integration"
+          homepage "https://github.com/oiahoon/termonaut"
+          version "${VERSION_NO_V}"
+
+          on_macos do
+            if Hardware::CPU.intel?
+              url "https://github.com/oiahoon/termonaut/releases/download/${VERSION}/termonaut-${VERSION_NO_V}-darwin-amd64"
+              sha256 "${DARWIN_AMD64_SHA}"
+
+              def install
+                bin.install "termonaut-${VERSION_NO_V}-darwin-amd64" => "termonaut"
+              end
+            end
+
+            if Hardware::CPU.arm?
+              url "https://github.com/oiahoon/termonaut/releases/download/${VERSION}/termonaut-${VERSION_NO_V}-darwin-arm64"
+              sha256 "${DARWIN_ARM64_SHA}"
+
+              def install
+                bin.install "termonaut-${VERSION_NO_V}-darwin-arm64" => "termonaut"
+              end
+            end
+          end
+
+          def caveats
+            <<~EOS
+              🚀 Termonaut has been installed successfully!
+
+              To get started:
+              1. Initialize shell integration:
+                 termonaut advanced shell install
+
+              2. Restart your terminal or run:
+                 source ~/.bashrc  # or ~/.zshrc
+
+              3. Start tracking your productivity:
+                 termonaut stats
+                 termonaut tui
+
+              4. Set up GitHub integration (optional):
+                 termonaut github auth
+                 termonaut github sync now
+
+              📖 Documentation: https://github.com/oiahoon/termonaut
+              🐛 Issues: https://github.com/oiahoon/termonaut/issues
+
+              Happy terminal productivity tracking! 🎯
+            EOS
+          end
+
+          test do
+            assert_match "${VERSION_NO_V}", shell_output("#{bin}/termonaut version")
+          end
+        end
+        EOF
+
+    - name: Commit and push to homebrew-termonaut
+      run: |
+        VERSION="${{ steps.release_info.outputs.VERSION }}"
+
+        cd homebrew-tap
+
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+
+        git add termonaut.rb
+        git commit -m "🍺 Update Termonaut formula to ${VERSION}
+
+        - Updated version to ${VERSION#v}
+        - Updated macOS Intel and ARM64 SHA256 checksums
+        - Automated update via GitHub Actions from main repo
+
+        Release: https://github.com/oiahoon/termonaut/releases/tag/${VERSION}"
+
+        git push
+
+    - name: Update local Formula (backup)
+      run: |
+        VERSION="${{ steps.release_info.outputs.VERSION }}"
+        VERSION_NO_V="${{ steps.release_info.outputs.VERSION_NO_V }}"
+        DARWIN_AMD64_SHA="${{ steps.release_info.outputs.DARWIN_AMD64_SHA }}"
+        DARWIN_ARM64_SHA="${{ steps.release_info.outputs.DARWIN_ARM64_SHA }}"
+
+        # Also update the local Formula as backup
+        cat > Formula/termonaut.rb << EOF
+        class Termonaut < Formula
+          desc "Gamified terminal productivity tracker with XP, achievements, and GitHub integration"
+          homepage "https://github.com/oiahoon/termonaut"
+          version "${VERSION_NO_V}"
+
+          on_macos do
+            if Hardware::CPU.intel?
+              url "https://github.com/oiahoon/termonaut/releases/download/${VERSION}/termonaut-${VERSION_NO_V}-darwin-amd64"
+              sha256 "${DARWIN_AMD64_SHA}"
+
+              def install
+                bin.install "termonaut-${VERSION_NO_V}-darwin-amd64" => "termonaut"
+              end
+            end
+
+            if Hardware::CPU.arm?
+              url "https://github.com/oiahoon/termonaut/releases/download/${VERSION}/termonaut-${VERSION_NO_V}-darwin-arm64"
+              sha256 "${DARWIN_ARM64_SHA}"
+
+              def install
+                bin.install "termonaut-${VERSION_NO_V}-darwin-arm64" => "termonaut"
+              end
+            end
+          end
+
+          def caveats
+            <<~EOS
+              🚀 Termonaut has been installed successfully!
+
+              To get started:
+              1. Initialize shell integration:
+                 termonaut advanced shell install
+
+              2. Restart your terminal or run:
+                 source ~/.bashrc  # or ~/.zshrc
+
+              3. Start tracking your productivity:
+                 termonaut stats
+                 termonaut tui
+
+              4. Set up GitHub integration (optional):
+                 termonaut github auth
+                 termonaut github sync now
+
+              📖 Documentation: https://github.com/oiahoon/termonaut
+              🐛 Issues: https://github.com/oiahoon/termonaut/issues
+
+              Happy terminal productivity tracking! 🎯
+            EOS
+          end
+
+          test do
+            assert_match "${VERSION_NO_V}", shell_output("#{bin}/termonaut version")
+          end
+        end
+        EOF
+
+        git add Formula/termonaut.rb
+        git commit -m "🍺 Sync Homebrew formula with tap repo ${VERSION}" || echo "No changes to commit"
+
+    - name: Verify formula
+      run: |
+        cd homebrew-tap
+        echo "🧪 Verifying Homebrew formula syntax..."
+        brew install --build-from-source ./termonaut.rb --dry-run || echo "Dry run completed"
+
+        echo "✅ Formula updated successfully!"
+        echo "📋 Updated both:"
+        echo "  - oiahoon/homebrew-termonaut/termonaut.rb (main tap)"
+        echo "  - Formula/termonaut.rb (local backup)"
+        echo "🚀 Ready for Homebrew installation: brew install oiahoon/termonaut/termonaut"
+
+  update-local-formula:
+    name: Update Local Formula (Fallback)
+    runs-on: ubuntu-latest
+    needs: [update-homebrew-tap]
+    if: failure()
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Update local formula as fallback
+      run: |
+        echo "⚠️ Homebrew tap update failed, updating local formula as fallback"
+
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          VERSION="${{ github.event.inputs.version }}"
+        else
+          VERSION="${{ github.event.release.tag_name }}"
+        fi
+
+        echo "Updating local Formula/termonaut.rb for version ${VERSION}"
+        echo "Users can install with: brew install Formula/termonaut.rb"
+
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+
+        git add Formula/termonaut.rb
+        git commit -m "🍺 Update local Homebrew formula to ${VERSION} (tap update failed)" || echo "No changes to commit"
+        git push

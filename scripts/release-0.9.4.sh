@@ -88,6 +88,40 @@ if [[ "$CURRENT_OS" == "darwin" ]]; then
     CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build -ldflags="${LDFLAGS}" -o dist/termonaut-${VERSION}-darwin-arm64 cmd/termonaut/*.go
 fi
 
+# Linux builds using Docker for cross-compilation
+if command -v docker &> /dev/null; then
+    echo -e "Building for Linux (x64) using Docker..."
+    docker run --rm --platform linux/amd64 -v "$PWD":/usr/src/app -w /usr/src/app \
+        -e CGO_ENABLED=1 -e GOOS=linux -e GOARCH=amd64 \
+        golang:1.23-alpine sh -c "
+            apk add --no-cache gcc musl-dev sqlite-dev && \
+            go build -ldflags='${LDFLAGS}' -o dist/termonaut-${VERSION}-linux-amd64 cmd/termonaut/*.go
+        "
+
+    echo -e "Building for Linux (ARM64) using Docker..."
+    docker run --rm --platform linux/arm64 -v "$PWD":/usr/src/app -w /usr/src/app \
+        -e CGO_ENABLED=1 -e GOOS=linux -e GOARCH=arm64 \
+        golang:1.23-alpine sh -c "
+            apk add --no-cache gcc musl-dev sqlite-dev && \
+            go build -ldflags='${LDFLAGS}' -o dist/termonaut-${VERSION}-linux-arm64 cmd/termonaut/*.go
+        "
+else
+    echo -e "${YELLOW}⚠️ Docker not available, skipping Linux builds${NC}"
+fi
+
+# Windows builds using Docker for cross-compilation
+if command -v docker &> /dev/null; then
+    echo -e "Building for Windows (x64) using Docker..."
+    docker run --rm -v "$PWD":/usr/src/app -w /usr/src/app \
+        -e CGO_ENABLED=1 -e GOOS=windows -e GOARCH=amd64 -e CC=x86_64-w64-mingw32-gcc \
+        golang:1.23-bullseye sh -c "
+            apt-get update && apt-get install -y gcc-mingw-w64-x86-64 && \
+            go build -ldflags='${LDFLAGS}' -o dist/termonaut-${VERSION}-windows-amd64.exe cmd/termonaut/*.go
+        "
+else
+    echo -e "${YELLOW}⚠️ Docker not available, skipping Windows builds${NC}"
+fi
+
 echo -e "${GREEN}✅ All binaries built successfully${NC}"
 
 # Test the local binary

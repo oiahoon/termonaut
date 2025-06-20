@@ -105,6 +105,12 @@ func (sm *SyncManager) SyncToRepository(userProgress *models.UserProgress) (*Syn
 	}
 	result.ProfileSize = profileSize
 
+	// Sync avatar files
+	if err := sm.syncAvatarFiles(repoPath); err != nil {
+		result.ErrorMessage = fmt.Sprintf("Failed to sync avatar files: %v", err)
+		return result, err
+	}
+
 	// Generate heatmap
 	if err := sm.generateHeatmap(repoPath); err != nil {
 		result.ErrorMessage = fmt.Sprintf("Failed to generate heatmap: %v", err)
@@ -265,7 +271,11 @@ func (sm *SyncManager) generateBadges(userProgress *models.UserProgress, repoPat
 
 // generateProfile generates and saves profile markdown
 func (sm *SyncManager) generateProfile(userProgress *models.UserProgress, repoPath string) (int, error) {
-	profile, err := sm.profileGenerator.GenerateProfile(userProgress)
+	// Get avatar information
+	avatarURL, avatarASCII := sm.getAvatarInfo(userProgress, repoPath)
+
+	// Generate profile with avatar
+	profile, err := sm.profileGenerator.GenerateProfileWithAvatar(userProgress, avatarURL, avatarASCII)
 	if err != nil {
 		return 0, err
 	}
@@ -487,4 +497,115 @@ func (sm *SyncManager) formatDuration(d time.Duration) string {
 	} else {
 		return fmt.Sprintf("%dd ago", int(d.Hours()/24))
 	}
+}
+
+// syncAvatarFiles syncs avatar files to the repository
+func (sm *SyncManager) syncAvatarFiles(repoPath string) error {
+	// Create avatars directory in the repository
+	avatarDir := filepath.Join(repoPath, "avatars")
+	if err := os.MkdirAll(avatarDir, 0755); err != nil {
+		return fmt.Errorf("failed to create avatars directory: %w", err)
+	}
+
+	// Get avatar cache directory
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("failed to get home directory: %w", err)
+	}
+
+	avatarCacheDir := filepath.Join(homeDir, ".termonaut", "avatars")
+	svgDir := filepath.Join(avatarCacheDir, "svg")
+
+	// Check if SVG directory exists
+	if _, err := os.Stat(svgDir); os.IsNotExist(err) {
+		// No avatars to sync
+		return nil
+	}
+
+	// Copy SVG files to repository
+	return filepath.Walk(svgDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil // Skip errors, continue with other files
+		}
+
+		if strings.HasSuffix(info.Name(), ".svg") {
+			// Copy SVG file to repository
+			destPath := filepath.Join(avatarDir, info.Name())
+
+			sourceFile, err := os.Open(path)
+			if err != nil {
+				return nil // Skip this file
+			}
+			defer sourceFile.Close()
+
+			destFile, err := os.Create(destPath)
+			if err != nil {
+				return nil // Skip this file
+			}
+			defer destFile.Close()
+
+			_, err = sourceFile.WriteTo(destFile)
+			if err != nil {
+				return nil // Skip this file
+			}
+		}
+
+		return nil
+	})
+}
+
+// getAvatarInfo retrieves avatar URL and ASCII art for the user
+func (sm *SyncManager) getAvatarInfo(userProgress *models.UserProgress, repoPath string) (string, string) {
+	// Get avatar cache directory
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", ""
+	}
+
+	avatarCacheDir := filepath.Join(homeDir, ".termonaut", "avatars")
+
+	// Find the most recent avatar SVG file for this user level
+	svgDir := filepath.Join(avatarCacheDir, "svg")
+	asciiDir := filepath.Join(avatarCacheDir, "ascii")
+
+	var latestSVG, latestASCII string
+	var latestTime time.Time
+
+	// Find the most recent SVG file
+	if entries, err := os.ReadDir(svgDir); err == nil {
+		for _, entry := range entries {
+			if strings.HasSuffix(entry.Name(), ".svg") {
+				if info, err := entry.Info(); err == nil {
+					if info.ModTime().After(latestTime) {
+						latestTime = info.ModTime()
+						latestSVG = entry.Name()
+					}
+				}
+			}
+		}
+	}
+
+	// Find corresponding ASCII file
+	if entries, err := os.ReadDir(asciiDir); err == nil {
+		for _, entry := range entries {
+			if strings.HasSuffix(entry.Name(), ".txt") {
+				if info, err := entry.Info(); err == nil {
+					// Use the ASCII file with the closest modification time
+					if latestASCII == "" || info.ModTime().After(latestTime.Add(-time.Hour)) {
+						latestASCII = entry.Name()
+					}
+				}
+			}
+		}
+	}
+
+	// Generate avatar URL (relative to repository)
+	var avatarURL string
+	if latestSVG != "" {
+		avatarURL = fmt.Sprintf("./avatars/%s", latestSVG)
+	}
+
+	// For GitHub sync, we don't include ASCII art as it doesn't render well in markdown
+	// ASCII art is only used for terminal display
+	return avatarURL, ""
 }

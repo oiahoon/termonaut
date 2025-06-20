@@ -198,11 +198,11 @@ func init() {
 	// Add productivity analytics command (temporarily commented out)
 	// rootCmd.AddCommand(analyticsCmd)
 
-	// Add advanced features
-	rootCmd.AddCommand(heatmapCmd)
-	rootCmd.AddCommand(dashboardCmd)
-	rootCmd.AddCommand(tuiCmd)
-	rootCmd.AddCommand(createAdvancedCmd())
+	// Add advanced features (temporarily commented out)
+	// rootCmd.AddCommand(heatmapCmd)
+	// rootCmd.AddCommand(dashboardCmd)
+	// rootCmd.AddCommand(tuiCmd)
+	// rootCmd.AddCommand(createAdvancedCmd())
 
 	// Add completion command
 	completionCmd := &cobra.Command{

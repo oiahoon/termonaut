@@ -814,13 +814,70 @@ func runGitHubSyncNowCommand(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("🚀 Syncing to %s...\n", cfg.SyncRepo)
-	fmt.Println("✅ Sync feature coming soon!")
-	fmt.Println("📋 For now, use the GitHub commands:")
-	fmt.Println("• tn github badges generate")
-	fmt.Println("• tn github profile generate")
-	fmt.Println("• tn github actions generate termonaut-stats-update")
+
+	// Initialize database and stats
+	logger := logrus.New()
+	logger.SetLevel(logrus.WarnLevel)
+
+	db, err := database.New(config.GetDataDir(cfg), logger)
+	if err != nil {
+		return fmt.Errorf("failed to initialize database: %w", err)
+	}
+	defer db.Close()
+
+	// Get user progress
+	userProgress, err := db.GetUserProgress()
+	if err != nil {
+		return fmt.Errorf("failed to get user progress: %w", err)
+	}
+
+	// Initialize sync manager
+	statsCalc := stats.New(db)
+	syncManager := github.NewSyncManager(cfg, statsCalc)
+
+	// Perform sync
+	result, err := syncManager.SyncToRepository(userProgress)
+	if err != nil {
+		fmt.Printf("❌ Sync failed: %v\n", err)
+		return err
+	}
+
+	if result.Success {
+		fmt.Printf("✅ Sync completed successfully!\n")
+		fmt.Printf("📁 Files updated: %d\n", len(result.FilesUpdated))
+		fmt.Printf("🏷️  Badges updated: %d\n", result.BadgesUpdated)
+		fmt.Printf("📄 Profile size: %d bytes\n", result.ProfileSize)
+		fmt.Printf("⏱️  Duration: %s\n", result.SyncDuration)
+		if result.CommitHash != "" {
+			fmt.Printf("🔗 Commit: %s\n", result.CommitHash[:8])
+		}
+
+		if len(result.FilesUpdated) > 0 {
+			fmt.Println("\n📋 Updated files:")
+			for _, file := range result.FilesUpdated {
+				fmt.Printf("  • %s\n", file)
+			}
+		}
+	} else {
+		fmt.Printf("❌ Sync failed: %s\n", result.ErrorMessage)
+	}
+
+	// Save sync result
+	if err := saveLastSyncResult(cfg, result); err != nil {
+		fmt.Printf("⚠️  Warning: Failed to save sync result: %v\n", err)
+	}
 
 	return nil
+}
+
+// saveLastSyncResult saves the sync result to a file
+func saveLastSyncResult(cfg *config.Config, result *github.SyncResult) error {
+	lastSyncFile := filepath.Join(config.GetDataDir(cfg), "last_sync.json")
+	data, err := json.MarshalIndent(result, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(lastSyncFile, data, 0644)
 }
 
 func runGitHubSyncStatusCommand(cmd *cobra.Command, args []string) error {

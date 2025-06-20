@@ -32,6 +32,8 @@ type ProfileData struct {
 	BadgeURLs       map[string]string    `json:"badge_urls"`
 	ProfileMarkdown string               `json:"profile_markdown"`
 	LastUpdated     time.Time            `json:"last_updated"`
+	AvatarURL       string               `json:"avatar_url,omitempty"`
+	AvatarASCII     string               `json:"avatar_ascii,omitempty"`
 }
 
 // AchievementInfo represents achievement information for sharing
@@ -52,6 +54,11 @@ type SocialSnippet struct {
 
 // GenerateProfile generates a complete shareable profile
 func (pg *ProfileGenerator) GenerateProfile(userProgress *models.UserProgress) (*ProfileData, error) {
+	return pg.GenerateProfileWithAvatar(userProgress, "", "")
+}
+
+// GenerateProfileWithAvatar generates a complete shareable profile with avatar
+func (pg *ProfileGenerator) GenerateProfileWithAvatar(userProgress *models.UserProgress, avatarURL, avatarASCII string) (*ProfileData, error) {
 	basicStats, err := pg.stats.GetBasicStats()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get basic stats: %w", err)
@@ -87,7 +94,7 @@ func (pg *ProfileGenerator) GenerateProfile(userProgress *models.UserProgress) (
 	}
 
 	// Generate profile markdown
-	profileMarkdown := pg.generateProfileMarkdown(userProgress, basicStats, badgeURLs, achievements)
+	profileMarkdown := pg.generateProfileMarkdownWithAvatar(userProgress, basicStats, badgeURLs, achievements, avatarURL, avatarASCII)
 
 	return &ProfileData{
 		UserProgress:    userProgress,
@@ -96,40 +103,79 @@ func (pg *ProfileGenerator) GenerateProfile(userProgress *models.UserProgress) (
 		BadgeURLs:       badgeURLs,
 		ProfileMarkdown: profileMarkdown,
 		LastUpdated:     time.Now(),
+		AvatarURL:       avatarURL,
+		AvatarASCII:     avatarASCII,
 	}, nil
 }
 
 // generateProfileMarkdown creates a markdown representation of the profile
 func (pg *ProfileGenerator) generateProfileMarkdown(userProgress *models.UserProgress, basicStats *stats.BasicStats, badgeURLs map[string]string, achievements []AchievementInfo) string {
+	return pg.generateProfileMarkdownWithAvatar(userProgress, basicStats, badgeURLs, achievements, "", "")
+}
+
+// generateProfileMarkdownWithAvatar creates a markdown representation of the profile with avatar
+func (pg *ProfileGenerator) generateProfileMarkdownWithAvatar(userProgress *models.UserProgress, basicStats *stats.BasicStats, badgeURLs map[string]string, achievements []AchievementInfo, avatarURL, avatarASCII string) string {
 	var builder strings.Builder
 
 	// Header
 	builder.WriteString("# 🚀 My Termonaut Profile\n\n")
 	builder.WriteString("*Gamified terminal productivity tracking*\n\n")
 
-	// Badges section
-	builder.WriteString("## 📊 Stats\n\n")
+	// Badges section at the top
+	builder.WriteString("## 📊 Badges\n\n")
 	for label, url := range badgeURLs {
 		builder.WriteString(fmt.Sprintf("![%s](%s) ", strings.Title(label), url))
 	}
 	builder.WriteString("\n\n")
 
-	// Overview section
-	builder.WriteString("## 📈 Overview\n\n")
-	builder.WriteString(fmt.Sprintf("- **Level**: %d (XP: %d)\n", userProgress.CurrentLevel, userProgress.TotalXP))
-	builder.WriteString(fmt.Sprintf("- **Total Commands**: %d\n", basicStats.TotalCommands))
-	builder.WriteString(fmt.Sprintf("- **Unique Commands**: %d\n", basicStats.UniqueCommands))
-	builder.WriteString(fmt.Sprintf("- **Current Streak**: %d days\n", userProgress.CurrentStreak))
-	builder.WriteString(fmt.Sprintf("- **Longest Streak**: %d days\n", userProgress.LongestStreak))
-	builder.WriteString(fmt.Sprintf("- **Commands Today**: %d\n", basicStats.CommandsToday))
+	// Avatar and Stats Layout
+	if avatarURL != "" {
+		builder.WriteString("## 🎨 Profile & Stats\n\n")
 
-	// Most used command
-	if basicStats.MostUsedCommand != "" {
-		builder.WriteString(fmt.Sprintf("- **Favorite Command**: `%s` (%d times)\n",
-			basicStats.MostUsedCommand, basicStats.MostUsedCount))
+		// Use table layout for left-right layout
+		builder.WriteString("<table><tr>\n")
+
+		// Avatar column (only SVG, no ASCII for GitHub)
+		builder.WriteString("<td width=\"40%\" align=\"center\">\n\n")
+		builder.WriteString("### 👤 Avatar\n\n")
+		builder.WriteString(fmt.Sprintf("![Avatar](%s)\n\n", avatarURL))
+		builder.WriteString("</td>\n")
+
+		// Stats column
+		builder.WriteString("<td width=\"60%\">\n\n")
+		builder.WriteString("### 📊 Stats Overview\n\n")
+		builder.WriteString(fmt.Sprintf("**Level**: %d (XP: %d)  \n", userProgress.CurrentLevel, userProgress.TotalXP))
+		builder.WriteString(fmt.Sprintf("**Total Commands**: %d  \n", basicStats.TotalCommands))
+		builder.WriteString(fmt.Sprintf("**Unique Commands**: %d  \n", basicStats.UniqueCommands))
+		builder.WriteString(fmt.Sprintf("**Current Streak**: %d days  \n", userProgress.CurrentStreak))
+		builder.WriteString(fmt.Sprintf("**Longest Streak**: %d days  \n", userProgress.LongestStreak))
+		builder.WriteString(fmt.Sprintf("**Commands Today**: %d  \n", basicStats.CommandsToday))
+
+		// Most used command
+		if basicStats.MostUsedCommand != "" {
+			builder.WriteString(fmt.Sprintf("**Favorite Command**: `%s` (%d times)  \n",
+				basicStats.MostUsedCommand, basicStats.MostUsedCount))
+		}
+		builder.WriteString("\n</td>\n")
+
+		builder.WriteString("</tr></table>\n\n")
+	} else {
+		// Fallback to original layout without avatar
+		builder.WriteString("## 📈 Overview\n\n")
+		builder.WriteString(fmt.Sprintf("- **Level**: %d (XP: %d)\n", userProgress.CurrentLevel, userProgress.TotalXP))
+		builder.WriteString(fmt.Sprintf("- **Total Commands**: %d\n", basicStats.TotalCommands))
+		builder.WriteString(fmt.Sprintf("- **Unique Commands**: %d\n", basicStats.UniqueCommands))
+		builder.WriteString(fmt.Sprintf("- **Current Streak**: %d days\n", userProgress.CurrentStreak))
+		builder.WriteString(fmt.Sprintf("- **Longest Streak**: %d days\n", userProgress.LongestStreak))
+		builder.WriteString(fmt.Sprintf("- **Commands Today**: %d\n", basicStats.CommandsToday))
+
+		// Most used command
+		if basicStats.MostUsedCommand != "" {
+			builder.WriteString(fmt.Sprintf("- **Favorite Command**: `%s` (%d times)\n",
+				basicStats.MostUsedCommand, basicStats.MostUsedCount))
+		}
+		builder.WriteString("\n")
 	}
-
-	builder.WriteString("\n")
 
 	// Achievements section
 	builder.WriteString("## 🏆 Achievements\n\n")

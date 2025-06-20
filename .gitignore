@@ -1,7 +1,7 @@
 # Termonaut .gitignore
 
 # Binaries and executables
-termonaut
+/termonaut
 termonaut.exe
 *.exe
 *.dll

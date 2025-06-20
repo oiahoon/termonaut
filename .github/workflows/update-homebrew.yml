@@ -92,15 +92,23 @@ jobs:
         repository: oiahoon/homebrew-termonaut
         token: ${{ secrets.HOMEBREW_TAP_TOKEN || secrets.GITHUB_TOKEN }}
         path: homebrew-tap
+      continue-on-error: true
 
     - name: Update termonaut.rb formula
+      if: hashFiles('homebrew-tap') != ''
       run: |
         VERSION="${{ steps.release_info.outputs.VERSION }}"
         VERSION_NO_V="${{ steps.release_info.outputs.VERSION_NO_V }}"
         DARWIN_AMD64_SHA="${{ steps.release_info.outputs.DARWIN_AMD64_SHA }}"
         DARWIN_ARM64_SHA="${{ steps.release_info.outputs.DARWIN_ARM64_SHA }}"
 
-        cd homebrew-tap
+        if [ -d "homebrew-tap" ]; then
+          echo "📁 Updating external homebrew-termonaut repository"
+          cd homebrew-tap
+        else
+          echo "⚠️ External repository not available, skipping external update"
+          exit 0
+        fi
 
         # Create updated formula
         cat > termonaut.rb << EOF
@@ -162,24 +170,30 @@ jobs:
         EOF
 
     - name: Commit and push to homebrew-termonaut
+      if: hashFiles('homebrew-tap') != ''
       run: |
         VERSION="${{ steps.release_info.outputs.VERSION }}"
 
-        cd homebrew-tap
+        if [ -d "homebrew-tap" ]; then
+          echo "📁 Committing to external homebrew-termonaut repository"
+          cd homebrew-tap
 
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
 
-        git add termonaut.rb
-        git commit -m "🍺 Update Termonaut formula to ${VERSION}
+          git add termonaut.rb
+          git commit -m "🍺 Update Termonaut formula to ${VERSION}
 
-        - Updated version to ${VERSION#v}
-        - Updated macOS Intel and ARM64 SHA256 checksums
-        - Automated update via GitHub Actions from main repo
+          - Updated version to ${VERSION#v}
+          - Updated macOS Intel and ARM64 SHA256 checksums
+          - Automated update via GitHub Actions from main repo
 
-        Release: https://github.com/oiahoon/termonaut/releases/tag/${VERSION}"
+          Release: https://github.com/oiahoon/termonaut/releases/tag/${VERSION}"
 
-        git push
+          git push
+        else
+          echo "⚠️ External repository not available, skipping external push"
+        fi
 
     - name: Update local Formula (backup)
       run: |
@@ -252,15 +266,28 @@ jobs:
 
     - name: Verify formula
       run: |
-        cd homebrew-tap
         echo "🧪 Verifying Homebrew formula syntax..."
-        brew install --build-from-source ./termonaut.rb --dry-run || echo "Dry run completed"
 
-        echo "✅ Formula updated successfully!"
-        echo "📋 Updated both:"
-        echo "  - oiahoon/homebrew-termonaut/termonaut.rb (main tap)"
-        echo "  - Formula/termonaut.rb (local backup)"
-        echo "🚀 Ready for Homebrew installation: brew install oiahoon/termonaut/termonaut"
+        if [ -d "homebrew-tap" ]; then
+          cd homebrew-tap
+          brew install --build-from-source ./termonaut.rb --dry-run || echo "External formula dry run completed"
+          cd ..
+        fi
+
+        if [ -f "Formula/termonaut.rb" ]; then
+          brew install --build-from-source Formula/termonaut.rb --dry-run || echo "Local formula dry run completed"
+        fi
+
+        echo "✅ Formula verification completed!"
+        echo "📋 Updated:"
+        if [ -d "homebrew-tap" ]; then
+          echo "  ✅ oiahoon/homebrew-termonaut/termonaut.rb (main tap)"
+          echo "  🚀 Install with: brew install oiahoon/termonaut/termonaut"
+        else
+          echo "  ⚠️ External tap update skipped (no access token)"
+        fi
+        echo "  ✅ Formula/termonaut.rb (local backup)"
+        echo "  🚀 Install with: brew install Formula/termonaut.rb"
 
   update-local-formula:
     name: Update Local Formula (Fallback)
@@ -280,6 +307,8 @@ jobs:
 
         if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
           VERSION="${{ github.event.inputs.version }}"
+        elif [ "${{ github.event_name }}" = "workflow_call" ]; then
+          VERSION="${{ inputs.version }}"
         else
           VERSION="${{ github.event.release.tag_name }}"
         fi

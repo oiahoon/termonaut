@@ -15,7 +15,7 @@ Termonaut is a lightweight, privacy-focused terminal productivity tracker that g
 
 ## ✨ Features
 
-### 💡 **Empty Command Stats** ⭐ *Stable in v0.9.0!*
+### 💡 **Empty Command Stats** ⭐ *Stable in v0.9.2!*
 - **Instant Stats**: Press Enter on empty command line to see quick stats
 - **Dual Modes**: Minimal one-liner or rich multi-line display
 - **Smart Integration**: Respects your theme and privacy settings
@@ -27,14 +27,15 @@ Termonaut is a lightweight, privacy-focused terminal productivity tracker that g
 - **Usage Analytics**: Daily, weekly, and monthly productivity insights
 - **Smart Metrics**: Active time estimation, command categories, and streak tracking
 
-### 🎮 **Gamification System**
+### 🎮 **Gamification System** ⭐ *Enhanced in v0.9.2!*
 - **XP & Levels**: Earn experience points for terminal usage with space-themed progression
-- **Achievement Badges**: Unlock 🏅 badges for milestones (100 commands, 7-day streaks, etc.)
-- **Easter Eggs**: 22+ contextual surprises for git, docker, and special moments
+- **Achievement Badges**: Unlock 🏅 badges for milestones (20+ achievements available)
+- **Easter Eggs**: 22+ contextual surprises for git, docker, kubernetes, AI tools, and special moments
 - **New Command Bonuses**: Extra XP for exploring new tools and commands
 - **Streak Rewards**: Maintain daily/weekly usage streaks for motivation
+- **Category Mastery**: 17 command categories with specialized XP multipliers
 
-### 🎨 **Avatar System** ⭐ *NEW in v0.9.1!*
+### 🎨 **Avatar System** ⭐ *Stable in v0.9.2!*
 - **Visual Identity**: Personalized ASCII art avatars that evolve with your level
 - **Smart Layout**: Side-by-side stats display with intelligent terminal width detection
 - **Multiple Styles**: Choose from pixel-art, bottts, adventurer, or avataaars themes
@@ -42,25 +43,38 @@ Termonaut is a lightweight, privacy-focused terminal productivity tracker that g
 - **Rich Details**: High-quality colored ASCII art with optimized character sets for maximum detail
 - **Evolution System**: Avatar appearance changes and gains new features as you level up
 - **Full Management**: Complete avatar configuration, preview, and refresh commands
+- **Network Resilience**: Graceful fallback system for offline avatar generation
 
 ### 📊 **Rich CLI Interface**
 - **Interactive Stats**: Beautiful terminal-native data visualization
 - **Multiple Views**: Session summaries, command breakdowns, and trend analysis
+- **Interactive Dashboard**: Modern TUI with Bubble Tea framework (`termonaut tui`)
 - **Customizable Display**: ASCII charts, emoji themes, and configurable output
 - **Export Options**: JSON/CSV export for backup and integration
+- **Short Aliases**: Use `tn` instead of `termonaut` for all commands
 
-### 🔄 **GitHub Integration** ⭐ *NEW in v0.9.0!*
-- **Dynamic Badges**: Auto-updating Shields.io badges for your README
-- **Profile Generation**: Complete productivity profiles in Markdown
+### 🔄 **GitHub Integration** ⭐ *Stable in v0.9.2!*
+- **Dynamic Badges**: Auto-updating Shields.io badges for your README (6 badge types)
+- **Profile Generation**: Complete productivity profiles in Markdown with avatar integration
 - **Repository Sync**: Automatic synchronization with your GitHub repos
 - **GitHub Actions**: Workflow templates for automated stats updates
+- **Heatmap Generation**: GitHub-style activity heatmaps in HTML/SVG/Markdown formats
 - **Stats Export**: JSON and Markdown export for social sharing
+
+### 🎭 **Easter Eggs & Fun** ⭐ *Enhanced in v0.9.2!*
+- **22+ Trigger Conditions**: Speed runs, coffee breaks, git operations, docker/k8s, AI tools
+- **Context-Aware**: Smart detection of programming languages, databases, testing frameworks
+- **Motivational Messages**: 30+ unique messages across all categories
+- **Modern Terminal Support**: Optimized for Warp, iTerm2, VS Code terminals
+- **Configurable Frequency**: Reduced interruption with balanced probability settings
 
 ### 🔒 **Privacy & Performance**
 - **100% Local**: All data stays on your machine by default
+- **Command Sanitization**: Smart detection and redaction of passwords, tokens, URLs
 - **Lightweight**: Minimal performance impact with async logging
 - **SQLite Storage**: Fast, reliable, and portable data storage
 - **No Dependencies**: Single binary with zero external requirements
+- **CI Environment Detection**: Automatic quiet mode for 15+ CI platforms
 
 ## 🚀 Quick Start
 
@@ -145,14 +159,14 @@ tn stats --alltime           # Lifetime statistics
 
 **Check Your Progress:**
 ```bash
-termonaut xp                 # Current XP and level
-termonaut badges             # Earned achievements
-termonaut sessions           # Recent terminal sessions
+termonaut tui                # Interactive dashboard
+termonaut easter-egg --test  # Test easter egg system
+termonaut github --help      # GitHub integration features
 
 # Short commands:
-tn xp                        # Current XP and level
-tn badges                    # Earned achievements
-tn sessions                  # Recent terminal sessions
+tn tui                       # Interactive dashboard
+tn easter-egg --test         # Test easter egg system
+tn github --help             # GitHub integration features
 ```
 
 **Avatar Management:**
@@ -237,7 +251,7 @@ anonymous_mode = false          # Strip personal paths from logs
 
 ## 🎖️ Achievement System
 
-Unlock badges as you progress:
+Unlock 20+ badges as you progress:
 
 | Badge | Description | Criteria |
 |-------|-------------|----------|
@@ -249,6 +263,17 @@ Unlock badges as you progress:
 | 🪐 **Cosmic Explorer** | Universe navigator | 30-day usage streak |
 | ⚡ **Lightning Fast** | Speed demon | 500 commands in one day |
 | 🛸 **Master Navigator** | Elite astronaut | Reach level 25 |
+| 🏃‍♂️ **Shell Sprinter** | Speed demon | Execute commands rapidly |
+| 🧙‍♂️ **Config Whisperer** | Configuration master | Edit config files frequently |
+| 🌙 **Night Coder** | Night owl | Code during late hours |
+| 🧬 **Git Commander** | Version control expert | Master git operations |
+| 🔥 **Pro Streaker** | Consistency champion | Maintain long streaks |
+| 🛡️ **Sudo Smasher** | Admin privileges user | Use sudo commands |
+| 🐳 **Docker Whale** | Container expert | Work with Docker |
+| 🎭 **Vim Escape Artist** | Editor ninja | Master vim commands |
+| 💪 **Error Survivor** | Resilience master | Handle command failures |
+
+*View all achievements with `tn tui` and navigate to the Achievements tab!*
 
 ## 🔧 Advanced Features
 
@@ -359,8 +384,9 @@ make build        # Build binary
 
 - [x] **v0.1**: Basic command logging and SQLite storage
 - [x] **v0.2**: Enhanced stats and session detection
-- [ ] **v0.5**: Full gamification system and achievements
-- [ ] **v0.9**: GitHub integration and badge generation
+- [x] **v0.5**: Full gamification system and achievements
+- [x] **v0.9**: GitHub integration and badge generation
+- [x] **v0.9.2**: Avatar system, Easter eggs, Network resilience
 - [ ] **v1.0**: Stable release with comprehensive documentation
 - [ ] **v1.x**: Social features and leaderboards
 

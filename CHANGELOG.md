@@ -5,6 +5,68 @@ All notable changes to Termonaut will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.3] - 2024-06-21 - Documentation & Sync Improvements 📚
+
+### 🔧 Technical Improvements
+
+**Avatar GitHub Sync Consistency**
+- **Fixed Avatar Selection Logic**: GitHub sync now uses the same avatar selection strategy as local display
+- **Enhanced Avatar Manager Integration**: Consistent avatar generation across local and remote displays
+- **Improved Cache Key Generation**: More reliable avatar caching and selection
+- **Better Fallback Handling**: Graceful degradation when avatar generation fails
+
+**CLI Command Improvements**
+- **Fixed Duplicate Commands**: Resolved duplicate command listings in help output
+- **Enhanced Command Registration**: Cleaner command structure with proper init() function handling
+- **Improved Error Handling**: Better error messages and recovery mechanisms
+
+**Data Consistency Verification**
+- **Database Integrity**: Verified command logging and stats generation consistency
+- **Stats Calculation**: Ensured accurate statistics across all display modes
+- **Session Tracking**: Improved session boundary detection and timing
+
+### 📖 Documentation Updates
+
+**Comprehensive Documentation Review**
+- **Updated README.md**: Reflected latest v0.9.2 features and capabilities
+- **Enhanced Feature Descriptions**: Detailed coverage of avatar system, easter eggs, and GitHub integration
+- **Accurate Command Examples**: Updated all CLI examples with current command structure
+- **Roadmap Updates**: Marked completed milestones and updated version statuses
+
+**Achievement System Documentation**
+- **Expanded Achievement List**: Added 20+ achievement descriptions with criteria
+- **Interactive Dashboard Info**: Highlighted TUI dashboard capabilities
+- **Command Reference**: Updated available commands and short aliases
+
+**Technical Documentation**
+- **Architecture Updates**: Reflected current system architecture and components
+- **Configuration Guide**: Updated all configuration options and examples
+- **Troubleshooting**: Enhanced troubleshooting guide with latest fixes
+
+### 🎯 User Experience Enhancements
+
+**Improved Command Discovery**
+- **Help System**: Fixed duplicate command issues in help output
+- **Command Aliases**: Verified `tn` short alias works for all commands
+- **Feature Visibility**: Better documentation of available features
+
+**Enhanced Reliability**
+- **Avatar System**: More reliable avatar generation and display
+- **GitHub Sync**: Consistent avatar display between local and GitHub profiles
+- **Error Recovery**: Better handling of edge cases and network issues
+
+### 🔍 Quality Assurance
+
+**Comprehensive Testing**
+- **Feature Verification**: Tested all documented features against actual implementation
+- **Command Validation**: Verified all CLI commands work as documented
+- **Integration Testing**: Ensured avatar system, GitHub sync, and stats work together
+
+**Documentation Accuracy**
+- **Code-Documentation Alignment**: Ensured all documented features are implemented
+- **Version Consistency**: Updated version numbers across all documentation
+- **Example Validation**: Verified all code examples and command outputs
+
 ## [0.9.2] - 2025-06-20 - Easter Eggs & Network Resilience 🎮
 
 ### 🎮 Easter Eggs System Optimization

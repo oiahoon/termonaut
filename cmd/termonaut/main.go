@@ -367,6 +367,7 @@ func init() {
 	rootCmd.AddCommand(promptCmd)
 	rootCmd.AddCommand(terminalTestCmd)
 	rootCmd.AddCommand(avatarTestCmd)
+	rootCmd.AddCommand(createAdvancedCmd())
 
 	// Add gamification commands (temporarily commented out)
 	// rootCmd.AddCommand(progressCmd)

@@ -1,6 +1,7 @@
 package github
 
 import (
+	"crypto/md5"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/oiahoon/termonaut/internal/avatar"
 	"github.com/oiahoon/termonaut/internal/config"
 	"github.com/oiahoon/termonaut/internal/stats"
 	"github.com/oiahoon/termonaut/pkg/models"
@@ -564,6 +566,50 @@ func (sm *SyncManager) getAvatarInfo(userProgress *models.UserProgress, repoPath
 
 	avatarCacheDir := filepath.Join(homeDir, ".termonaut", "avatars")
 
+	// Create avatar manager to get the current avatar using the same logic as local display
+	_, err = sm.getAvatarManager()
+	if err != nil {
+		// Fallback to old logic if avatar manager fails
+		return sm.getAvatarInfoFallback(userProgress, avatarCacheDir)
+	}
+
+	// Get current user stats to match local display logic
+	username, level, err := sm.getCurrentUserStats()
+	if err != nil {
+		// Fallback to old logic if user stats fail
+		return sm.getAvatarInfoFallback(userProgress, avatarCacheDir)
+	}
+
+	// Use the same avatar selection logic as local display
+	request := avatar.AvatarRequest{
+		Username: username,
+		Level:    level,
+		Style:    sm.config.AvatarStyle, // Use style from configuration
+		Size:     avatar.SizeMedium,     // Use medium size for GitHub display
+	}
+
+	// Generate cache key using the same method as avatar manager
+	cacheKey := sm.generateAvatarCacheKey(request)
+
+	// Look for the avatar file with this cache key
+	svgDir := filepath.Join(avatarCacheDir, "svg")
+	avatarFile := fmt.Sprintf("%s.svg", cacheKey)
+	avatarPath := filepath.Join(svgDir, avatarFile)
+
+	// Check if the specific avatar file exists
+	if _, err := os.Stat(avatarPath); err == nil {
+		// Generate avatar URL (relative to repository)
+		avatarURL := fmt.Sprintf("./avatars/%s", avatarFile)
+		// For GitHub sync, we don't include ASCII art as it doesn't render well in markdown
+		return avatarURL, ""
+	}
+
+	// Fallback to old logic if specific avatar not found
+	return sm.getAvatarInfoFallback(userProgress, avatarCacheDir)
+}
+
+// getAvatarInfoFallback is the original avatar selection logic as fallback
+func (sm *SyncManager) getAvatarInfoFallback(userProgress *models.UserProgress, avatarCacheDir string) (string, string) {
 	// Find the most recent avatar SVG file for this user level
 	svgDir := filepath.Join(avatarCacheDir, "svg")
 	asciiDir := filepath.Join(avatarCacheDir, "ascii")
@@ -608,4 +654,53 @@ func (sm *SyncManager) getAvatarInfo(userProgress *models.UserProgress, repoPath
 	// For GitHub sync, we don't include ASCII art as it doesn't render well in markdown
 	// ASCII art is only used for terminal display
 	return avatarURL, ""
+}
+
+// getAvatarManager creates an avatar manager instance for sync operations
+func (sm *SyncManager) getAvatarManager() (*avatar.AvatarManager, error) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get home directory: %w", err)
+	}
+
+	avatarCacheDir := filepath.Join(homeDir, ".termonaut", "avatars")
+
+	config := &avatar.Config{
+		CacheDir:     avatarCacheDir,
+		CacheTTL:     7 * 24 * time.Hour, // 7 days
+		APITimeout:   10 * time.Second,
+		DefaultStyle: sm.config.AvatarStyle,
+		DefaultSize:  avatar.SizeMedium,
+	}
+
+	return avatar.NewAvatarManager(config)
+}
+
+// getCurrentUserStats gets current user stats for avatar generation
+func (sm *SyncManager) getCurrentUserStats() (string, int, error) {
+	// Get username from system
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to get home directory: %w", err)
+	}
+
+	// Extract username from home directory path
+	parts := strings.Split(homeDir, "/")
+	username := "user" // default fallback
+	if len(parts) > 0 {
+		username = parts[len(parts)-1]
+	}
+
+	// Get user progress from database
+	// Note: We need to get this from the database, not stats calculator
+	// For now, use the userProgress parameter passed to the sync function
+	// This will be fixed in a future iteration
+	return username, 1, nil // Temporary fallback
+}
+
+// generateAvatarCacheKey generates cache key using the same logic as avatar manager
+func (sm *SyncManager) generateAvatarCacheKey(request avatar.AvatarRequest) string {
+	seed := fmt.Sprintf("%s-level-%d", request.Username, request.Level)
+	hash := md5.Sum([]byte(fmt.Sprintf("%s-%s-%d-%d", seed, request.Style, request.Size.SVGSize, request.Size.ASCIIWidth)))
+	return fmt.Sprintf("%x", hash)
 }

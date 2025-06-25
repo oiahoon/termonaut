@@ -36,7 +36,7 @@ type EasterEggManager struct {
 // NewEasterEggManager creates a new easter egg manager
 func NewEasterEggManager() *EasterEggManager {
 	return &EasterEggManager{
-		triggers: getEasterEggTriggers(),
+		triggers: MergeEasterEggTriggers(), // Use enhanced triggers
 		rand:     rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 }

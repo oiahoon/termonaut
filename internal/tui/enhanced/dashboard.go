@@ -53,6 +53,9 @@ type EnhancedDashboard struct {
 	spinner      spinner.Model
 	loading      bool
 	
+	// Animation components
+	xpRenderer   *XPProgressRenderer
+	
 	// Current data
 	userProgress *models.UserProgress
 	basicStats   *stats.BasicStats
@@ -130,6 +133,7 @@ func NewEnhancedDashboard(db *database.DB) *EnhancedDashboard {
 		avatarMgr:      avatarMgr,
 		spinner:        s,
 		loading:        true,
+		xpRenderer:     NewXPProgressRenderer(), // Initialize XP renderer
 		theme:          DefaultSpaceTheme(),
 		keyMap:         DefaultKeyMap(),
 		modePreference: "smart", // Default to smart mode
@@ -983,6 +987,13 @@ func (d *EnhancedDashboard) renderLevelProgress() string {
 		Padding(1).
 		Margin(1)
 	
+	// Use animated XP renderer
+	if d.xpRenderer != nil && d.userProgress != nil {
+		content := d.xpRenderer.RenderXPProgress(d.userProgress.TotalXP, d.userProgress.CurrentLevel)
+		return style.Render(content)
+	}
+	
+	// Fallback to static display
 	level := d.userProgress.CurrentLevel
 	xp := d.userProgress.TotalXP
 	nextLevelXP := (level + 1) * 100 // Simple calculation
@@ -1311,13 +1322,6 @@ func (d *EnhancedDashboard) formatTime(t *time.Time) string {
 		return "Unknown"
 	}
 	return t.Format("2006-01-02")
-}
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }
 
 // Data loading

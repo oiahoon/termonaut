@@ -18,21 +18,32 @@ var easterEggCmd = &cobra.Command{
 motivational quote to brighten your terminal experience.
 
 Flags:
-  --floating    Test floating notification system (experimental)`,
+  --floating    Test old floating notification system (deprecated)
+  --smart       Test new smart notification system (recommended)`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runEasterEggCommand(cmd, args)
 	},
 }
 
 var floatingTest bool
+var smartTest bool
 
 func init() {
-	easterEggCmd.Flags().BoolVar(&floatingTest, "floating", false, "Test floating notification system")
+	easterEggCmd.Flags().BoolVar(&floatingTest, "floating", false, "Test old floating notification system (deprecated)")
+	easterEggCmd.Flags().BoolVar(&smartTest, "smart", false, "Test new smart notification system")
 }
 
 func runEasterEggCommand(cmd *cobra.Command, args []string) error {
-	// Check if floating test is requested
+	// Check if smart test is requested
+	if smartTest {
+		return runSmartNotificationTest()
+	}
+	
+	// Check if floating test is requested (deprecated)
 	if floatingTest {
+		fmt.Println("⚠️  Warning: Floating notification system is deprecated due to terminal interference issues.")
+		fmt.Println("   Please use --smart flag to test the new smart notification system.")
+		fmt.Println()
 		return runFloatingNotificationTest()
 	}
 	
@@ -237,6 +248,67 @@ func enabledStatus(enabled bool) string {
 		return "✅ Enabled"
 	}
 	return "❌ Disabled"
+}
+
+// runSmartNotificationTest runs the smart notification test
+func runSmartNotificationTest() error {
+	fmt.Println("🔔 Smart Notification System Test")
+	fmt.Println("=================================")
+	fmt.Println()
+	
+	notifier := display.NewSmartNotifier()
+	
+	// Show available methods
+	available := notifier.GetAvailableMethods()
+	fmt.Printf("📋 Available notification methods (%d):\n", len(available))
+	for i, method := range available {
+		fmt.Printf("   %d. %s\n", i+1, notifier.MethodName(method))
+	}
+	fmt.Println()
+	
+	// Test messages
+	testMessages := []string{
+		"🚀 Welcome to Termonaut Space Program!",
+		"☕ Coffee break detected! Caffeine levels optimal!",
+		"🎮 Achievement Unlocked: Terminal Ninja!",
+		"🦆 Rubber duck debugging mode activated!",
+		"🌙 Late night coding session detected!",
+		"🎉 Productivity celebration! You're on fire!",
+	}
+	
+	fmt.Println("🧪 Testing smart notification selection...")
+	fmt.Println("(Check for system notifications, terminal title changes, or bell sounds)")
+	fmt.Println()
+	
+	for i, message := range testMessages {
+		fmt.Printf("📱 Notification %d/%d: %s\n", i+1, len(testMessages), message)
+		
+		// Use smart notification
+		if err := notifier.ShowEasterEgg(message); err != nil {
+			fmt.Printf("   ❌ Failed: %v\n", err)
+		} else {
+			fmt.Printf("   ✅ Sent successfully\n")
+		}
+		
+		// Wait between notifications
+		if i < len(testMessages)-1 {
+			time.Sleep(2 * time.Second)
+		}
+	}
+	
+	fmt.Println()
+	fmt.Println("✅ Smart notification test complete!")
+	fmt.Println()
+	fmt.Println("💡 How it works:")
+	fmt.Println("   • Automatically detects your system capabilities")
+	fmt.Println("   • Prefers system notifications (best user experience)")
+	fmt.Println("   • Falls back to terminal title or bell notifications")
+	fmt.Println("   • Never interferes with your terminal content")
+	fmt.Println("   • Safe for all environments and use cases")
+	fmt.Println()
+	fmt.Println("🎯 This replaces the old floating notification system!")
+	
+	return nil
 }
 
 // runFloatingNotificationTest runs the floating notification test

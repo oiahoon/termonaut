@@ -248,6 +248,41 @@ func (d *EnhancedDashboard) View() string {
 	// Footer
 	footer := d.renderFooter()
 	
+	// Calculate available content height more accurately
+	headerHeight := 1 // Header is single line with padding
+	tabNavHeight := 3 // Tab nav with padding
+	footerHeight := 1 // Footer is single line with padding
+	availableHeight := d.windowHeight - headerHeight - tabNavHeight - footerHeight - 1 // 1 for safety margin
+	
+	// Ensure minimum usable height
+	if availableHeight < 6 {
+		availableHeight = 6
+	}
+	
+	// For very small terminals, prioritize content over chrome
+	if d.windowHeight < 15 {
+		// In tiny terminals, reduce chrome and maximize content
+		availableHeight = d.windowHeight - 4 // Minimal chrome
+		if availableHeight < 4 {
+			availableHeight = 4
+		}
+	}
+	
+	// Apply height constraint to content and add scrolling if needed
+	contentLines := strings.Split(content, "\n")
+	if len(contentLines) > availableHeight {
+		// Truncate content to fit available space
+		contentLines = contentLines[:availableHeight-1]
+		contentLines = append(contentLines, "... (content truncated, resize terminal for full view)")
+		content = strings.Join(contentLines, "\n")
+	}
+	
+	// Ensure content takes up the allocated space
+	content = lipgloss.NewStyle().
+		Height(availableHeight).
+		Width(d.windowWidth).
+		Render(content)
+	
 	// Combine all parts
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
@@ -292,10 +327,32 @@ func (d *EnhancedDashboard) renderHeader() string {
 func (d *EnhancedDashboard) renderTabNavigation() string {
 	var tabs []string
 	
+	// Calculate if we need to use compact tab names for narrow terminals
+	useCompactTabs := d.windowWidth < 80
+	
 	for i, name := range tabNames {
+		// Use shorter names for compact mode
+		displayName := name
+		if useCompactTabs {
+			switch TabType(i) {
+			case HomeTab:
+				displayName = "🏠"
+			case AnalyticsTab:
+				displayName = "📊"
+			case GamificationTab:
+				displayName = "🎮"
+			case ActivityTab:
+				displayName = "🔥"
+			case ToolsTab:
+				displayName = "🛠️"
+			case SettingsTab:
+				displayName = "⚙️"
+			}
+		}
+		
 		style := lipgloss.NewStyle().
-			Padding(0, 2).
-			Margin(0, 1)
+			Padding(0, 1).
+			Margin(0, 0)
 			
 		if TabType(i) == d.activeTab {
 			style = style.
@@ -308,15 +365,29 @@ func (d *EnhancedDashboard) renderTabNavigation() string {
 				Background(d.theme.Colors.Surface)
 		}
 		
-		tabs = append(tabs, style.Render(name))
+		tabs = append(tabs, style.Render(displayName))
 	}
 	
 	tabBar := lipgloss.JoinHorizontal(lipgloss.Left, tabs...)
 	
+	// Add navigation hints
+	navHints := ""
+	if d.windowWidth >= 60 {
+		navHints = lipgloss.NewStyle().
+			Foreground(d.theme.Colors.TextMuted).
+			Render(" • Tab/Shift+Tab: Navigate • q: Quit")
+	}
+	
+	tabLine := lipgloss.JoinHorizontal(
+		lipgloss.Left,
+		tabBar,
+		navHints,
+	)
+	
 	return lipgloss.NewStyle().
 		Padding(1, 0).
 		Width(d.windowWidth).
-		Render(tabBar)
+		Render(tabLine)
 }
 
 // renderHomeTab renders the home tab content
@@ -863,10 +934,24 @@ func (d *EnhancedDashboard) renderFooter() string {
 	footerStyle := lipgloss.NewStyle().
 		Foreground(d.theme.Colors.Text).
 		Background(d.theme.Colors.Surface).
-		Padding(0, 2).
+		Padding(0, 1).
 		Width(d.windowWidth)
 	
-	help := "[Tab] Next • [Shift+Tab] Prev • [r] Refresh • [q] Quit"
+	// Show different help based on terminal size
+	var help string
+	if d.windowWidth >= 100 {
+		help = "[Tab] Next Tab • [Shift+Tab] Previous Tab • [r] Refresh • [q] Quit"
+	} else if d.windowWidth >= 60 {
+		help = "[Tab] Next • [Shift+Tab] Prev • [r] Refresh • [q] Quit"
+	} else {
+		help = "[Tab] Next • [q] Quit"
+	}
+	
+	// Add terminal size info for debugging (only in very wide terminals)
+	if d.windowWidth >= 120 {
+		help += fmt.Sprintf(" • Terminal: %dx%d", d.windowWidth, d.windowHeight)
+	}
+	
 	return footerStyle.Render(help)
 }
 

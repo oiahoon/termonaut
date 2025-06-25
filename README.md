@@ -173,12 +173,12 @@ source ~/.bashrc  # or ~/.zshrc
 ```bash
 termonaut stats              # Today's overview (minimal mode)
 termonaut stats --weekly     # This week's stats
-termonaut stats --alltime    # Lifetime statistics
+termonaut stats --monthly    # This month's statistics
 
 # Or use the short alias:
 tn stats                     # Today's overview
 tn stats --weekly            # This week's stats
-tn stats --alltime           # Lifetime statistics
+tn stats --monthly           # This month's statistics
 ```
 
 **Interactive Dashboard:**
@@ -194,18 +194,16 @@ tn tui -m compact           # Compact mode
 tn tui -m full              # Full mode
 ```
 
-**Avatar Management:**
+**Avatar System:**
 ```bash
-termonaut avatar show        # Display your current avatar
-termonaut avatar config --style pixel-art  # Change avatar style
-termonaut avatar preview -l 10  # Preview avatar at level 10
-termonaut avatar refresh     # Force regenerate avatar
-termonaut avatar stats       # Avatar system statistics
+# Avatar system is integrated into TUI and stats display
+# Avatar management via configuration:
+termonaut config set avatar_style pixel-art    # Change avatar style
+termonaut config set avatar_size large         # Set avatar size preference
 
 # Short commands:
-tn avatar show               # Display your current avatar
-tn avatar config --style bottts  # Change to robot style
-tn avatar preview -l 25      # Preview high-level avatar
+tn config set avatar_style bottts              # Change to robot style
+tn config get avatar                           # View avatar settings
 ```
 
 **Alias Management:**
@@ -234,8 +232,13 @@ tn config get                          # View all settings
 
 **Data Management:**
 ```bash
-termonaut export stats.json  # Export your data
-termonaut import backup.json # Restore from backup
+# Data export/import features are planned for future release
+# Current data location: ~/.termonaut/termonaut.db
+# Manual backup: cp ~/.termonaut/termonaut.db ~/backup/
+
+# Advanced data operations:
+termonaut advanced bulk --help    # Bulk operations on command data
+termonaut advanced filter --help  # Advanced filtering and search
 ```
 
 ### Example Output
@@ -380,10 +383,11 @@ export PS1="$(termonaut prompt) $PS1"
 
 ### API and Integrations
 
-Export data for external tools:
+Advanced data operations:
 ```bash
-termonaut export --json | jq '.stats.total_commands'  # Use with jq
-termonaut export --csv > stats.csv                     # Spreadsheet analysis
+termonaut advanced analytics --help    # Advanced analytics features
+termonaut advanced api --help          # API server for integrations
+termonaut github sync --help           # GitHub integration features
 ```
 
 ## 🏗️ Project Structure
@@ -398,6 +402,27 @@ termonaut export --csv > stats.csv                     # Spreadsheet analysis
 │   └── badges/          # Generated badge files
 └── backups/             # Automatic daily backups
 ```
+
+## 🚧 Feature Status
+
+### ✅ Fully Implemented
+- **Core Tracking**: Command logging, session management, analytics
+- **Gamification**: XP system, achievements, easter eggs
+- **TUI Interface**: Interactive dashboard with all tabs functional
+- **GitHub Integration**: Badges, profiles, sync, GitHub Actions
+- **New User Experience**: Setup wizard, quickstart, alias management
+- **Advanced Features**: Shell integration, API server, bulk operations
+
+### 🔄 In Development
+- **Avatar CLI Commands**: Direct avatar management via command line
+- **Data Export/Import**: JSON/CSV export and backup restoration
+- **Enhanced Configuration**: More granular config management
+
+### 📋 Planned Features
+- **Plugin System**: Extensible architecture for custom features
+- **Social Features**: Leaderboards and community sharing
+- **Advanced Analytics**: Machine learning insights
+- **Mobile Companion**: Stats viewing on mobile devices
 
 ## 🤝 Contributing
 

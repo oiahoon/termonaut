@@ -1,78 +1,119 @@
 #!/bin/bash
 
-# Update Homebrew Formula with Real Checksums
-# This script updates the Formula/termonaut.rb file with actual checksums from a release
+# Script to update Homebrew formula with correct SHA256 values
+# Usage: ./scripts/update-homebrew-formula.sh [version]
 
 set -e
 
-VERSION=${1:-"v0.9.0"}
-BUILD_VERSION=$(echo "$VERSION" | sed 's/^v//')
-CHECKSUMS_FILE="dist/termonaut-${VERSION}-checksums.txt"
+VERSION=${1:-"v0.10.0"}
+VERSION_NO_V=${VERSION#v}
 
-echo "🔄 Updating Homebrew formula for ${VERSION}..."
+echo "🍺 Updating Homebrew formula for Termonaut ${VERSION}"
 
-# Check if checksums file exists
-if [[ ! -f "$CHECKSUMS_FILE" ]]; then
-    echo "❌ Checksums file not found: $CHECKSUMS_FILE"
-    echo "Please run ./scripts/build-release.sh ${VERSION} first"
-    exit 1
-fi
+# URLs for the binaries
+AMD64_URL="https://github.com/oiahoon/termonaut/releases/download/${VERSION}/termonaut-${VERSION_NO_V}-darwin-amd64"
+ARM64_URL="https://github.com/oiahoon/termonaut/releases/download/${VERSION}/termonaut-${VERSION_NO_V}-darwin-arm64"
 
-# Extract checksums
-echo "📋 Extracting checksums..."
+echo "📥 Downloading binaries to calculate SHA256..."
 
-# macOS Intel
-AMD64_SHA=$(grep "darwin-amd64.tar.gz" "$CHECKSUMS_FILE" | awk '{print $1}')
-# macOS Apple Silicon
-ARM64_SHA=$(grep "darwin-arm64.tar.gz" "$CHECKSUMS_FILE" | awk '{print $1}')
-# Linux x86_64
-LINUX_AMD64_SHA=$(grep "linux-amd64.tar.gz" "$CHECKSUMS_FILE" | awk '{print $1}')
-# Linux ARM64
-LINUX_ARM64_SHA=$(grep "linux-arm64.tar.gz" "$CHECKSUMS_FILE" | awk '{print $1}')
+# Create temp directory
+TEMP_DIR=$(mktemp -d)
+cd "$TEMP_DIR"
 
-echo "Checksums found:"
-echo "  macOS Intel:     $AMD64_SHA"
-echo "  macOS ARM:       $ARM64_SHA"
-echo "  Linux x86_64:    $LINUX_AMD64_SHA"
-echo "  Linux ARM64:     $LINUX_ARM64_SHA"
+# Download binaries
+echo "  Downloading AMD64 binary..."
+curl -sSL "$AMD64_URL" -o termonaut-darwin-amd64
 
-# Update Formula/termonaut.rb
+echo "  Downloading ARM64 binary..."
+curl -sSL "$ARM64_URL" -o termonaut-darwin-arm64
+
+# Calculate SHA256
+echo "🔐 Calculating SHA256 checksums..."
+DARWIN_AMD64_SHA=$(shasum -a 256 termonaut-darwin-amd64 | cut -d' ' -f1)
+DARWIN_ARM64_SHA=$(shasum -a 256 termonaut-darwin-arm64 | cut -d' ' -f1)
+
+echo "  AMD64 SHA256: ${DARWIN_AMD64_SHA}"
+echo "  ARM64 SHA256: ${DARWIN_ARM64_SHA}"
+
+# Go back to project directory
+cd - > /dev/null
+
+# Update the formula
 echo "📝 Updating Formula/termonaut.rb..."
 
-# Create a temporary file
-TEMP_FILE=$(mktemp)
+cat > Formula/termonaut.rb << EOF
+class Termonaut < Formula
+  desc "Gamified terminal productivity tracker with XP, achievements, and GitHub integration"
+  homepage "https://github.com/oiahoon/termonaut"
+  version "${VERSION_NO_V}"
+  license "MIT"
 
-# Update the formula with real checksums and version
-sed -e "s/PLACEHOLDER_SHA256_AMD64/$AMD64_SHA/g" \
-    -e "s/PLACEHOLDER_SHA256_ARM64/$ARM64_SHA/g" \
-    -e "s/PLACEHOLDER_SHA256_LINUX_AMD64/$LINUX_AMD64_SHA/g" \
-    -e "s/PLACEHOLDER_SHA256_LINUX_ARM64/$LINUX_ARM64_SHA/g" \
-    -e "s/v0\.9\.0/$VERSION/g" \
-    -e "s/\"0\.9\.0\"/\"$BUILD_VERSION\"/g" \
-    Formula/termonaut.rb > "$TEMP_FILE"
+  on_macos do
+    on_intel do
+      url "https://github.com/oiahoon/termonaut/releases/download/${VERSION}/termonaut-${VERSION_NO_V}-darwin-amd64"
+      sha256 "${DARWIN_AMD64_SHA}"
+    end
 
-# Replace the original file
-mv "$TEMP_FILE" Formula/termonaut.rb
+    on_arm do
+      url "https://github.com/oiahoon/termonaut/releases/download/${VERSION}/termonaut-${VERSION_NO_V}-darwin-arm64"
+      sha256 "${DARWIN_ARM64_SHA}"
+    end
+  end
+
+  def install
+    # Install the binary directly (no tar.gz extraction needed)
+    if OS.mac? && Hardware::CPU.intel?
+      bin.install "termonaut-${VERSION_NO_V}-darwin-amd64" => "termonaut"
+    elsif OS.mac? && Hardware::CPU.arm?
+      bin.install "termonaut-${VERSION_NO_V}-darwin-arm64" => "termonaut"
+    end
+  end
+
+  def caveats
+    <<~EOS
+      🚀 Termonaut has been installed successfully!
+
+      To get started:
+      1. Initialize shell integration:
+         termonaut advanced shell install
+
+      2. Restart your terminal or run:
+         source ~/.bashrc  # or ~/.zshrc
+
+      3. Start tracking your productivity:
+         termonaut stats
+         termonaut tui
+
+      4. Set up GitHub integration (optional):
+         termonaut github auth
+         termonaut github sync now
+
+      📖 Documentation: https://github.com/oiahoon/termonaut
+      🐛 Issues: https://github.com/oiahoon/termonaut/issues
+
+      Happy terminal productivity tracking! 🎯
+    EOS
+  end
+
+  test do
+    assert_match "${VERSION_NO_V}", shell_output("#{bin}/termonaut version")
+  end
+end
+EOF
+
+# Clean up
+rm -rf "$TEMP_DIR"
 
 echo "✅ Formula updated successfully!"
 echo ""
-echo "📋 Next steps:"
-echo "1. Test the formula locally:"
-echo "   brew install --formula Formula/termonaut.rb"
-echo "   brew test termonaut"
-echo "   brew audit --strict termonaut"
+echo "📋 Summary:"
+echo "  Version: ${VERSION_NO_V}"
+echo "  AMD64 SHA256: ${DARWIN_AMD64_SHA}"
+echo "  ARM64 SHA256: ${DARWIN_ARM64_SHA}"
 echo ""
-echo "2. Commit the updated formula:"
-echo "   git add Formula/termonaut.rb"
-echo "   git commit -m \"Update Homebrew formula for ${VERSION}\""
+echo "🧪 To test the formula locally:"
+echo "  brew install --build-from-source Formula/termonaut.rb"
 echo ""
-echo "3. Create or update your Homebrew tap:"
-echo "   # If you have a tap repository:"
-echo "   cp Formula/termonaut.rb /path/to/homebrew-tap/termonaut.rb"
-echo "   cd /path/to/homebrew-tap"
-echo "   git add termonaut.rb"
-echo "   git commit -m \"Update termonaut to ${VERSION}\""
-echo "   git push"
-echo ""
-echo "4. Or submit to homebrew-core:"
-echo "   # Follow the instructions in docs/HOMEBREW_RELEASE.md"
+echo "🚀 To commit the changes:"
+echo "  git add Formula/termonaut.rb"
+echo "  git commit -m \"🍺 Update Homebrew formula to ${VERSION}\""

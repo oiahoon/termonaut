@@ -7,21 +7,20 @@ class Termonaut < Formula
   on_macos do
     on_intel do
       url "https://github.com/oiahoon/termonaut/releases/download/v0.10.0/termonaut-0.10.0-darwin-amd64"
-      sha256 "PLACEHOLDER_INTEL_SHA256"
+      sha256 "7144cf15ccc632c5f9d5a6bf4376024ae8e355cc01631f08979ac1bd6c82e21a"
     end
 
     on_arm do
       url "https://github.com/oiahoon/termonaut/releases/download/v0.10.0/termonaut-0.10.0-darwin-arm64"
-      sha256 "PLACEHOLDER_ARM_SHA256"
+      sha256 "6f479a97351f8908e91d5cf4a42f697c83ec3fcc15566853f5fb379dbb166972"
     end
   end
 
   def install
-    # Install the binary directly (no tar.gz extraction needed)
     if OS.mac? && Hardware::CPU.intel?
-      bin.install "termonaut-0.9.5-darwin-amd64" => "termonaut"
+      bin.install "termonaut-0.10.0-darwin-amd64" => "termonaut"
     elsif OS.mac? && Hardware::CPU.arm?
-      bin.install "termonaut-0.9.5-darwin-arm64" => "termonaut"
+      bin.install "termonaut-0.10.0-darwin-arm64" => "termonaut"
     end
   end
 
@@ -52,6 +51,6 @@ class Termonaut < Formula
   end
 
   test do
-    assert_match "0.9.5", shell_output("#{bin}/termonaut version")
+    assert_match "0.10.0", shell_output("#{bin}/termonaut version")
   end
 end

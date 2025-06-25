@@ -122,72 +122,63 @@ jobs:
           exit 0
         fi
 
-        # Create updated formula
-        cat > termonaut.rb << 'FORMULA_EOF'
-class Termonaut < Formula
-  desc "Gamified terminal productivity tracker with XP, achievements, and GitHub integration"
-  homepage "https://github.com/oiahoon/termonaut"
-  version "VERSION_PLACEHOLDER"
-  license "MIT"
-
-  on_macos do
-    on_intel do
-      url "https://github.com/oiahoon/termonaut/releases/download/VERSION_TAG_PLACEHOLDER/termonaut-VERSION_PLACEHOLDER-darwin-amd64"
-      sha256 "AMD64_SHA_PLACEHOLDER"
-    end
-
-    on_arm do
-      url "https://github.com/oiahoon/termonaut/releases/download/VERSION_TAG_PLACEHOLDER/termonaut-VERSION_PLACEHOLDER-darwin-arm64"
-      sha256 "ARM64_SHA_PLACEHOLDER"
-    end
-  end
-
-  def install
-    if OS.mac? && Hardware::CPU.intel?
-      bin.install "termonaut-VERSION_PLACEHOLDER-darwin-amd64" => "termonaut"
-    elsif OS.mac? && Hardware::CPU.arm?
-      bin.install "termonaut-VERSION_PLACEHOLDER-darwin-arm64" => "termonaut"
-    end
-  end
-
-  def caveats
-    <<~EOS
-      🚀 Termonaut has been installed successfully!
-
-      To get started:
-      1. Initialize shell integration:
-         termonaut advanced shell install
-
-      2. Restart your terminal or run:
-         source ~/.bashrc  # or ~/.zshrc
-
-      3. Start tracking your productivity:
-         termonaut stats
-         termonaut tui
-
-      4. Set up GitHub integration (optional):
-         termonaut github auth
-         termonaut github sync now
-
-      📖 Documentation: https://github.com/oiahoon/termonaut
-      🐛 Issues: https://github.com/oiahoon/termonaut/issues
-
-      Happy terminal productivity tracking! 🎯
-    EOS
-  end
-
-  test do
-    assert_match "VERSION_PLACEHOLDER", shell_output("#{bin}/termonaut version")
-  end
-end
-FORMULA_EOF
-
-        # Replace placeholders with actual values
-        sed -i.bak "s/VERSION_PLACEHOLDER/${VERSION_NO_V}/g" termonaut.rb
-        sed -i.bak "s/VERSION_TAG_PLACEHOLDER/${VERSION}/g" termonaut.rb
-        sed -i.bak "s/AMD64_SHA_PLACEHOLDER/${DARWIN_AMD64_SHA}/g" termonaut.rb
-        sed -i.bak "s/ARM64_SHA_PLACEHOLDER/${DARWIN_ARM64_SHA}/g" termonaut.rb
-        rm termonaut.rb.bak
+        # Create updated formula using a safer approach
+        echo "class Termonaut < Formula" > termonaut.rb
+        echo "  desc \"Gamified terminal productivity tracker with XP, achievements, and GitHub integration\"" >> termonaut.rb
+        echo "  homepage \"https://github.com/oiahoon/termonaut\"" >> termonaut.rb
+        echo "  version \"${VERSION_NO_V}\"" >> termonaut.rb
+        echo "  license \"MIT\"" >> termonaut.rb
+        echo "" >> termonaut.rb
+        echo "  on_macos do" >> termonaut.rb
+        echo "    on_intel do" >> termonaut.rb
+        echo "      url \"https://github.com/oiahoon/termonaut/releases/download/${VERSION}/termonaut-${VERSION_NO_V}-darwin-amd64\"" >> termonaut.rb
+        echo "      sha256 \"${DARWIN_AMD64_SHA}\"" >> termonaut.rb
+        echo "    end" >> termonaut.rb
+        echo "" >> termonaut.rb
+        echo "    on_arm do" >> termonaut.rb
+        echo "      url \"https://github.com/oiahoon/termonaut/releases/download/${VERSION}/termonaut-${VERSION_NO_V}-darwin-arm64\"" >> termonaut.rb
+        echo "      sha256 \"${DARWIN_ARM64_SHA}\"" >> termonaut.rb
+        echo "    end" >> termonaut.rb
+        echo "  end" >> termonaut.rb
+        echo "" >> termonaut.rb
+        echo "  def install" >> termonaut.rb
+        echo "    if OS.mac? && Hardware::CPU.intel?" >> termonaut.rb
+        echo "      bin.install \"termonaut-${VERSION_NO_V}-darwin-amd64\" => \"termonaut\"" >> termonaut.rb
+        echo "    elsif OS.mac? && Hardware::CPU.arm?" >> termonaut.rb
+        echo "      bin.install \"termonaut-${VERSION_NO_V}-darwin-arm64\" => \"termonaut\"" >> termonaut.rb
+        echo "    end" >> termonaut.rb
+        echo "  end" >> termonaut.rb
+        echo "" >> termonaut.rb
+        echo "  def caveats" >> termonaut.rb
+        echo "    <<~EOS" >> termonaut.rb
+        echo "      🚀 Termonaut has been installed successfully!" >> termonaut.rb
+        echo "" >> termonaut.rb
+        echo "      To get started:" >> termonaut.rb
+        echo "      1. Initialize shell integration:" >> termonaut.rb
+        echo "         termonaut advanced shell install" >> termonaut.rb
+        echo "" >> termonaut.rb
+        echo "      2. Restart your terminal or run:" >> termonaut.rb
+        echo "         source ~/.bashrc  # or ~/.zshrc" >> termonaut.rb
+        echo "" >> termonaut.rb
+        echo "      3. Start tracking your productivity:" >> termonaut.rb
+        echo "         termonaut stats" >> termonaut.rb
+        echo "         termonaut tui" >> termonaut.rb
+        echo "" >> termonaut.rb
+        echo "      4. Set up GitHub integration (optional):" >> termonaut.rb
+        echo "         termonaut github auth" >> termonaut.rb
+        echo "         termonaut github sync now" >> termonaut.rb
+        echo "" >> termonaut.rb
+        echo "      📖 Documentation: https://github.com/oiahoon/termonaut" >> termonaut.rb
+        echo "      🐛 Issues: https://github.com/oiahoon/termonaut/issues" >> termonaut.rb
+        echo "" >> termonaut.rb
+        echo "      Happy terminal productivity tracking! 🎯" >> termonaut.rb
+        echo "    EOS" >> termonaut.rb
+        echo "  end" >> termonaut.rb
+        echo "" >> termonaut.rb
+        echo "  test do" >> termonaut.rb
+        echo "    assert_match \"${VERSION_NO_V}\", shell_output(\"\#{bin}/termonaut version\")" >> termonaut.rb
+        echo "  end" >> termonaut.rb
+        echo "end" >> termonaut.rb
 
     - name: Commit and push to homebrew-termonaut
       if: hashFiles('homebrew-tap') != ''
@@ -229,72 +220,63 @@ FORMULA_EOF
         DARWIN_AMD64_SHA="${{ steps.release_info.outputs.DARWIN_AMD64_SHA }}"
         DARWIN_ARM64_SHA="${{ steps.release_info.outputs.DARWIN_ARM64_SHA }}"
 
-        # Also update the local Formula as backup
-        cat > Formula/termonaut.rb << 'FORMULA_EOF'
-class Termonaut < Formula
-  desc "Gamified terminal productivity tracker with XP, achievements, and GitHub integration"
-  homepage "https://github.com/oiahoon/termonaut"
-  version "VERSION_PLACEHOLDER"
-  license "MIT"
-
-  on_macos do
-    on_intel do
-      url "https://github.com/oiahoon/termonaut/releases/download/VERSION_TAG_PLACEHOLDER/termonaut-VERSION_PLACEHOLDER-darwin-amd64"
-      sha256 "AMD64_SHA_PLACEHOLDER"
-    end
-
-    on_arm do
-      url "https://github.com/oiahoon/termonaut/releases/download/VERSION_TAG_PLACEHOLDER/termonaut-VERSION_PLACEHOLDER-darwin-arm64"
-      sha256 "ARM64_SHA_PLACEHOLDER"
-    end
-  end
-
-  def install
-    if OS.mac? && Hardware::CPU.intel?
-      bin.install "termonaut-VERSION_PLACEHOLDER-darwin-amd64" => "termonaut"
-    elsif OS.mac? && Hardware::CPU.arm?
-      bin.install "termonaut-VERSION_PLACEHOLDER-darwin-arm64" => "termonaut"
-    end
-  end
-
-  def caveats
-    <<~EOS
-      🚀 Termonaut has been installed successfully!
-
-      To get started:
-      1. Initialize shell integration:
-         termonaut advanced shell install
-
-      2. Restart your terminal or run:
-         source ~/.bashrc  # or ~/.zshrc
-
-      3. Start tracking your productivity:
-         termonaut stats
-         termonaut tui
-
-      4. Set up GitHub integration (optional):
-         termonaut github auth
-         termonaut github sync now
-
-      📖 Documentation: https://github.com/oiahoon/termonaut
-      🐛 Issues: https://github.com/oiahoon/termonaut/issues
-
-      Happy terminal productivity tracking! 🎯
-    EOS
-  end
-
-  test do
-    assert_match "VERSION_PLACEHOLDER", shell_output("#{bin}/termonaut version")
-  end
-end
-FORMULA_EOF
-
-        # Replace placeholders with actual values
-        sed -i.bak "s/VERSION_PLACEHOLDER/${VERSION_NO_V}/g" Formula/termonaut.rb
-        sed -i.bak "s/VERSION_TAG_PLACEHOLDER/${VERSION}/g" Formula/termonaut.rb
-        sed -i.bak "s/AMD64_SHA_PLACEHOLDER/${DARWIN_AMD64_SHA}/g" Formula/termonaut.rb
-        sed -i.bak "s/ARM64_SHA_PLACEHOLDER/${DARWIN_ARM64_SHA}/g" Formula/termonaut.rb
-        rm Formula/termonaut.rb.bak
+        # Also update the local Formula as backup using the same safe approach
+        echo "class Termonaut < Formula" > Formula/termonaut.rb
+        echo "  desc \"Gamified terminal productivity tracker with XP, achievements, and GitHub integration\"" >> Formula/termonaut.rb
+        echo "  homepage \"https://github.com/oiahoon/termonaut\"" >> Formula/termonaut.rb
+        echo "  version \"${VERSION_NO_V}\"" >> Formula/termonaut.rb
+        echo "  license \"MIT\"" >> Formula/termonaut.rb
+        echo "" >> Formula/termonaut.rb
+        echo "  on_macos do" >> Formula/termonaut.rb
+        echo "    on_intel do" >> Formula/termonaut.rb
+        echo "      url \"https://github.com/oiahoon/termonaut/releases/download/${VERSION}/termonaut-${VERSION_NO_V}-darwin-amd64\"" >> Formula/termonaut.rb
+        echo "      sha256 \"${DARWIN_AMD64_SHA}\"" >> Formula/termonaut.rb
+        echo "    end" >> Formula/termonaut.rb
+        echo "" >> Formula/termonaut.rb
+        echo "    on_arm do" >> Formula/termonaut.rb
+        echo "      url \"https://github.com/oiahoon/termonaut/releases/download/${VERSION}/termonaut-${VERSION_NO_V}-darwin-arm64\"" >> Formula/termonaut.rb
+        echo "      sha256 \"${DARWIN_ARM64_SHA}\"" >> Formula/termonaut.rb
+        echo "    end" >> Formula/termonaut.rb
+        echo "  end" >> Formula/termonaut.rb
+        echo "" >> Formula/termonaut.rb
+        echo "  def install" >> Formula/termonaut.rb
+        echo "    if OS.mac? && Hardware::CPU.intel?" >> Formula/termonaut.rb
+        echo "      bin.install \"termonaut-${VERSION_NO_V}-darwin-amd64\" => \"termonaut\"" >> Formula/termonaut.rb
+        echo "    elsif OS.mac? && Hardware::CPU.arm?" >> Formula/termonaut.rb
+        echo "      bin.install \"termonaut-${VERSION_NO_V}-darwin-arm64\" => \"termonaut\"" >> Formula/termonaut.rb
+        echo "    end" >> Formula/termonaut.rb
+        echo "  end" >> Formula/termonaut.rb
+        echo "" >> Formula/termonaut.rb
+        echo "  def caveats" >> Formula/termonaut.rb
+        echo "    <<~EOS" >> Formula/termonaut.rb
+        echo "      🚀 Termonaut has been installed successfully!" >> Formula/termonaut.rb
+        echo "" >> Formula/termonaut.rb
+        echo "      To get started:" >> Formula/termonaut.rb
+        echo "      1. Initialize shell integration:" >> Formula/termonaut.rb
+        echo "         termonaut advanced shell install" >> Formula/termonaut.rb
+        echo "" >> Formula/termonaut.rb
+        echo "      2. Restart your terminal or run:" >> Formula/termonaut.rb
+        echo "         source ~/.bashrc  # or ~/.zshrc" >> Formula/termonaut.rb
+        echo "" >> Formula/termonaut.rb
+        echo "      3. Start tracking your productivity:" >> Formula/termonaut.rb
+        echo "         termonaut stats" >> Formula/termonaut.rb
+        echo "         termonaut tui" >> Formula/termonaut.rb
+        echo "" >> Formula/termonaut.rb
+        echo "      4. Set up GitHub integration (optional):" >> Formula/termonaut.rb
+        echo "         termonaut github auth" >> Formula/termonaut.rb
+        echo "         termonaut github sync now" >> Formula/termonaut.rb
+        echo "" >> Formula/termonaut.rb
+        echo "      📖 Documentation: https://github.com/oiahoon/termonaut" >> Formula/termonaut.rb
+        echo "      🐛 Issues: https://github.com/oiahoon/termonaut/issues" >> Formula/termonaut.rb
+        echo "" >> Formula/termonaut.rb
+        echo "      Happy terminal productivity tracking! 🎯" >> Formula/termonaut.rb
+        echo "    EOS" >> Formula/termonaut.rb
+        echo "  end" >> Formula/termonaut.rb
+        echo "" >> Formula/termonaut.rb
+        echo "  test do" >> Formula/termonaut.rb
+        echo "    assert_match \"${VERSION_NO_V}\", shell_output(\"\#{bin}/termonaut version\")" >> Formula/termonaut.rb
+        echo "  end" >> Formula/termonaut.rb
+        echo "end" >> Formula/termonaut.rb
 
         git add Formula/termonaut.rb
 

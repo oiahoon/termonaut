@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/oiahoon/termonaut/internal/config"
+	"github.com/oiahoon/termonaut/internal/display"
 	"github.com/oiahoon/termonaut/internal/gamification"
 	"github.com/spf13/cobra"
 )
@@ -14,13 +15,27 @@ var easterEggCmd = &cobra.Command{
 	Use:   "easter-egg",
 	Short: "Test easter egg system or show motivational quote",
 	Long: `Test the easter egg system with sample data or display a random 
-motivational quote to brighten your terminal experience.`,
+motivational quote to brighten your terminal experience.
+
+Flags:
+  --floating    Test floating notification system (experimental)`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runEasterEggCommand(cmd, args)
 	},
 }
 
+var floatingTest bool
+
+func init() {
+	easterEggCmd.Flags().BoolVar(&floatingTest, "floating", false, "Test floating notification system")
+}
+
 func runEasterEggCommand(cmd *cobra.Command, args []string) error {
+	// Check if floating test is requested
+	if floatingTest {
+		return runFloatingNotificationTest()
+	}
+	
 	// Load configuration
 	cfg, err := config.Load()
 	if err != nil {
@@ -222,6 +237,57 @@ func enabledStatus(enabled bool) string {
 		return "✅ Enabled"
 	}
 	return "❌ Disabled"
+}
+
+// runFloatingNotificationTest runs the floating notification test
+func runFloatingNotificationTest() error {
+	fmt.Println("🎭 Floating Easter Egg Notification Test")
+	fmt.Println("========================================")
+	fmt.Println()
+	
+	// Create notification manager
+	notifier := display.NewFloatingNotifier()
+	
+	fmt.Println("📱 Testing different notification styles...")
+	fmt.Println("(Watch the top of your terminal for floating notifications)")
+	fmt.Println()
+	
+	// Test sequence
+	testMessages := []struct {
+		message string
+		delay   time.Duration
+	}{
+		{"🚀 Welcome to Termonaut Space Program!", 1 * time.Second},
+		{"☕ Coffee break detected! Caffeine levels optimal!", 4 * time.Second},
+		{"🎮 Achievement Unlocked: Terminal Ninja!", 4 * time.Second},
+		{"🦆 Rubber duck debugging mode activated!", 4 * time.Second},
+		{"🌙 Late night coding session detected!", 4 * time.Second},
+		{"🎉 Productivity celebration! You're on fire!", 4 * time.Second},
+	}
+	
+	for i, test := range testMessages {
+		fmt.Printf("⏰ Showing notification %d/%d: %s\n", i+1, len(testMessages), test.message)
+		
+		// Show the floating notification
+		notifier.ShowEasterEgg(test.message, 3*time.Second)
+		
+		// Wait before next notification
+		time.Sleep(test.delay)
+	}
+	
+	fmt.Println()
+	fmt.Println("✅ Test complete!")
+	fmt.Println()
+	fmt.Println("💡 How it works:")
+	fmt.Println("   • Detects your terminal type automatically")
+	fmt.Println("   • Uses modern terminal features when available")
+	fmt.Println("   • Falls back to ANSI escape sequences for compatibility")
+	fmt.Println("   • Notifications appear at the top and auto-disappear")
+	fmt.Println("   • Safe cooldown prevents notification spam")
+	fmt.Println()
+	fmt.Println("🎯 In real usage, these would appear when you trigger easter eggs!")
+	
+	return nil
 }
 
 func init() {

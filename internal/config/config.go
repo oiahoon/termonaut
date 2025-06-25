@@ -19,12 +19,25 @@ const (
 	ConfigFileType = "toml"
 )
 
+// UIConfig represents UI-specific configuration
+type UIConfig struct {
+	DefaultMode    string `mapstructure:"default_mode"`    // smart, compact, full, classic, minimal
+	Theme          string `mapstructure:"theme"`           // space, cyberpunk, minimal, retro, nature
+	ShowAvatar     bool   `mapstructure:"show_avatar"`     // Enable/disable avatar display
+	AvatarStyle    string `mapstructure:"avatar_style"`    // pixel-art, bottts, adventurer, avataaars
+	CompactLayout  bool   `mapstructure:"compact_layout"`  // Force compact layout
+	AnimationsEnabled bool `mapstructure:"animations_enabled"` // Enable animations
+}
+
 // Config represents the application configuration
 type Config struct {
 	// Display and Theme
 	DisplayMode      string `mapstructure:"display_mode"`
 	Theme            string `mapstructure:"theme"`
 	ShowGamification bool   `mapstructure:"show_gamification"`
+
+	// UI Configuration
+	UI UIConfig `mapstructure:"ui"`
 
 	// Tracking Behavior
 	IdleTimeoutMinutes int  `mapstructure:"idle_timeout_minutes"`
@@ -72,6 +85,16 @@ func DefaultConfig() *Config {
 		DisplayMode:      "enter",
 		Theme:            "emoji",
 		ShowGamification: true,
+
+		// UI Configuration
+		UI: UIConfig{
+			DefaultMode:       "smart",
+			Theme:            "space",
+			ShowAvatar:       true,
+			AvatarStyle:      "pixel-art",
+			CompactLayout:    false,
+			AnimationsEnabled: true,
+		},
 
 		// Tracking Behavior
 		IdleTimeoutMinutes: 10,

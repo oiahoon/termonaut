@@ -1,18 +1,18 @@
 class Termonaut < Formula
   desc "Gamified terminal productivity tracker with XP, achievements, and GitHub integration"
   homepage "https://github.com/oiahoon/termonaut"
-  version "0.9.5"
+  version "0.10.0"
   license "MIT"
 
   on_macos do
     on_intel do
-      url "https://github.com/oiahoon/termonaut/releases/download/v0.9.5/termonaut-0.9.5-darwin-amd64"
-      sha256 "55ea6d3c934ffe4005e30dc7f49ea4c4c9f635f90c6e345750a6c171d936a4a6"
+      url "https://github.com/oiahoon/termonaut/releases/download/v0.10.0/termonaut-0.10.0-darwin-amd64"
+      sha256 "PLACEHOLDER_INTEL_SHA256"
     end
 
     on_arm do
-      url "https://github.com/oiahoon/termonaut/releases/download/v0.9.5/termonaut-0.9.5-darwin-arm64"
-      sha256 "68298dd4439a7aaa07f87fcfac8b8dbe9908d2032eed1f5a72c5d72157f1be34"
+      url "https://github.com/oiahoon/termonaut/releases/download/v0.10.0/termonaut-0.10.0-darwin-arm64"
+      sha256 "PLACEHOLDER_ARM_SHA256"
     end
   end
 

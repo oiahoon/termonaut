@@ -75,7 +75,9 @@ func (h *HookInstaller) InstallWithForce(force bool) error {
 	// Create tn symlink if it doesn't exist
 	if err := h.createShortcutSymlink(); err != nil {
 		// Don't fail installation if symlink creation fails
-		fmt.Printf("Warning: Could not create 'tn' shortcut: %v\n", err)
+		fmt.Printf("⚠️  Warning: Could not create 'tn' shortcut: %v\n", err)
+		fmt.Printf("💡 You can still use 'termonaut' command directly\n")
+		fmt.Printf("   Or create the shortcut manually later\n")
 	}
 
 	// Create safe config manager
@@ -480,31 +482,60 @@ func (h *HookInstaller) createShortcutSymlink() error {
 	// Try to find a suitable directory in PATH for the symlink
 	pathDirs := strings.Split(os.Getenv("PATH"), ":")
 	var targetDir string
+	var needsSudo bool
 
-	// Prefer /usr/local/bin if it exists and is writable
-	for _, dir := range pathDirs {
-		if dir == "/usr/local/bin" {
-			if info, err := os.Stat(dir); err == nil && info.IsDir() {
+	// Check directories in order of preference
+	preferredDirs := []string{
+		"/usr/local/bin",
+		filepath.Join(os.Getenv("HOME"), ".local/bin"),
+		filepath.Join(os.Getenv("HOME"), "bin"),
+	}
+
+	// First, try preferred directories
+	for _, dir := range preferredDirs {
+		if info, err := os.Stat(dir); err == nil && info.IsDir() {
+			// Check if we can write to this directory
+			if h.isWritable(dir) {
 				targetDir = dir
+				needsSudo = false
+				break
+			} else if dir == "/usr/local/bin" {
+				// We can try with sudo for /usr/local/bin
+				targetDir = dir
+				needsSudo = true
 				break
 			}
 		}
 	}
 
-	// If /usr/local/bin is not available, try other directories
+	// If no preferred directory works, try other PATH directories
 	if targetDir == "" {
 		for _, dir := range pathDirs {
 			if strings.Contains(dir, "bin") && !strings.Contains(dir, "sbin") {
 				if info, err := os.Stat(dir); err == nil && info.IsDir() {
-					targetDir = dir
-					break
+					if h.isWritable(dir) {
+						targetDir = dir
+						needsSudo = false
+						break
+					}
 				}
 			}
 		}
 	}
 
+	// If still no suitable directory, create ~/.local/bin
 	if targetDir == "" {
-		return fmt.Errorf("no suitable directory found in PATH")
+		localBinDir := filepath.Join(os.Getenv("HOME"), ".local/bin")
+		if err := os.MkdirAll(localBinDir, 0755); err != nil {
+			return fmt.Errorf("failed to create %s: %w", localBinDir, err)
+		}
+		targetDir = localBinDir
+		needsSudo = false
+		
+		// Inform user about PATH update
+		fmt.Printf("📁 Created directory: %s\n", localBinDir)
+		fmt.Printf("💡 You may need to add this to your PATH:\n")
+		fmt.Printf("   export PATH=\"$HOME/.local/bin:$PATH\"\n")
 	}
 
 	linkPath := filepath.Join(targetDir, "tn")
@@ -515,12 +546,52 @@ func (h *HookInstaller) createShortcutSymlink() error {
 	}
 
 	// Create the symlink
-	if err := os.Symlink(h.binaryPath, linkPath); err != nil {
+	var err error
+	if needsSudo {
+		// Try with sudo first
+		if h.hasSudo() {
+			fmt.Printf("🔐 Creating 'tn' shortcut requires sudo privileges...\n")
+			err = h.createSymlinkWithSudo(h.binaryPath, linkPath)
+		} else {
+			err = fmt.Errorf("sudo not available and %s is not writable", targetDir)
+		}
+	} else {
+		err = os.Symlink(h.binaryPath, linkPath)
+	}
+
+	if err != nil {
 		return fmt.Errorf("failed to create symlink at %s: %w", linkPath, err)
 	}
 
 	fmt.Printf("✅ Created 'tn' shortcut at %s\n", linkPath)
 	return nil
+}
+
+// isWritable checks if a directory is writable
+func (h *HookInstaller) isWritable(dir string) bool {
+	testFile := filepath.Join(dir, ".termonaut_write_test")
+	file, err := os.Create(testFile)
+	if err != nil {
+		return false
+	}
+	file.Close()
+	os.Remove(testFile)
+	return true
+}
+
+// hasSudo checks if sudo is available
+func (h *HookInstaller) hasSudo() bool {
+	_, err := exec.LookPath("sudo")
+	return err == nil
+}
+
+// createSymlinkWithSudo creates a symlink using sudo
+func (h *HookInstaller) createSymlinkWithSudo(target, link string) error {
+	cmd := exec.Command("sudo", "ln", "-sf", target, link)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+	return cmd.Run()
 }
 
 // installZshHookWithForce installs the Zsh preexec hook with force option

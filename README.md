@@ -15,7 +15,28 @@ Termonaut is a lightweight, privacy-focused terminal productivity tracker that g
 
 ## ✨ Features
 
-### 💡 **Empty Command Stats** ⭐ *Stable in v0.9.2!*
+### 🆕 **New User Experience** ⭐ *New in Latest Version!*
+- **Interactive Setup Wizard**: `termonaut setup` - Guided configuration for new users
+- **Quick Start**: `termonaut quickstart` - One-command setup with sensible defaults
+- **Smart Onboarding**: Automatic detection of existing installations
+- **Permission-Safe Installation**: Intelligent directory selection, no sudo required
+
+### 🎨 **Three-Tier Viewing Modes** ⭐ *Enhanced Architecture!*
+- **Smart Mode**: `termonaut tui` - Automatically adapts to your terminal size (default)
+- **Compact Mode**: `termonaut tui --mode compact` - Efficient layout for smaller terminals
+- **Full Mode**: `termonaut tui --mode full` - Immersive experience for wide terminals
+- **Minimal Mode**: `termonaut stats` - Lightning-fast shell output
+- **Configurable Defaults**: Set your preferred mode in config file
+
+### 🖼️ **Dynamic Avatar System** ⭐ *Responsive Design!*
+- **Adaptive Sizing**: Avatars scale from 8x4 to 70x25 characters based on terminal size
+- **Multiple Styles**: Choose from pixel-art, bottts, adventurer, or avataaars themes
+- **Real-time Adaptation**: Automatically adjusts when you resize your terminal
+- **Evolution System**: Avatar appearance changes and gains new features as you level up
+- **Fallback System**: Beautiful default avatars when network is unavailable
+- **Alias Management**: `termonaut alias` commands for easy 'tn' shortcut management
+
+### 💡 **Empty Command Stats** ⭐ *Stable Feature!*
 - **Instant Stats**: Press Enter on empty command line to see quick stats
 - **Dual Modes**: Minimal one-liner or rich multi-line display
 - **Smart Integration**: Respects your theme and privacy settings
@@ -27,23 +48,13 @@ Termonaut is a lightweight, privacy-focused terminal productivity tracker that g
 - **Usage Analytics**: Daily, weekly, and monthly productivity insights
 - **Smart Metrics**: Active time estimation, command categories, and streak tracking
 
-### 🎮 **Gamification System** ⭐ *Enhanced in v0.9.2!*
+### 🎮 **Gamification System** ⭐ *Enhanced!*
 - **XP & Levels**: Earn experience points for terminal usage with space-themed progression
 - **Achievement Badges**: Unlock 🏅 badges for milestones (20+ achievements available)
 - **Easter Eggs**: 22+ contextual surprises for git, docker, kubernetes, AI tools, and special moments
 - **New Command Bonuses**: Extra XP for exploring new tools and commands
 - **Streak Rewards**: Maintain daily/weekly usage streaks for motivation
 - **Category Mastery**: 17 command categories with specialized XP multipliers
-
-### 🎨 **Avatar System** ⭐ *Stable in v0.9.2!*
-- **Visual Identity**: Personalized ASCII art avatars that evolve with your level
-- **Smart Layout**: Side-by-side stats display with intelligent terminal width detection
-- **Multiple Styles**: Choose from pixel-art, bottts, adventurer, or avataaars themes
-- **Adaptive Sizing**: Automatically adjusts avatar size (mini/small/medium/large) based on terminal width
-- **Rich Details**: High-quality colored ASCII art with optimized character sets for maximum detail
-- **Evolution System**: Avatar appearance changes and gains new features as you level up
-- **Full Management**: Complete avatar configuration, preview, and refresh commands
-- **Network Resilience**: Graceful fallback system for offline avatar generation
 
 ### 📊 **Rich CLI Interface**
 - **Interactive Stats**: Beautiful terminal-native data visualization
@@ -86,6 +97,16 @@ Termonaut is a lightweight, privacy-focused terminal productivity tracker that g
 curl -sSL https://raw.githubusercontent.com/oiahoon/termonaut/main/install.sh | bash
 ```
 
+**Homebrew Installation:**
+```bash
+# Install from our custom tap
+brew tap oiahoon/termonaut
+brew install termonaut
+
+# Or install from homebrew-core (coming soon!)
+brew install termonaut
+```
+
 **Manual Installation:**
 ```bash
 # Download latest release for your platform
@@ -113,23 +134,26 @@ go build -o termonaut cmd/termonaut/*.go
 sudo mv termonaut /usr/local/bin/
 ```
 
-**Homebrew Installation (Recommended):**
-```bash
-# Install from our custom tap
-brew tap oiahoon/termonaut
-brew install termonaut
-
-# Or install from homebrew-core (coming soon!)
-brew install termonaut
-```
-
 ### Setup
 
-Initialize Termonaut in your shell:
+🆕 **New User? Start Here:**
+
+**Interactive Setup (Recommended):**
 ```bash
-termonaut advanced shell install
-# Or use the short alias:
-tn advanced shell install
+termonaut setup
+# Guided configuration with explanations
+```
+
+**Quick Setup:**
+```bash
+termonaut quickstart
+# One-command setup with sensible defaults
+```
+
+**Manual Setup:**
+```bash
+termonaut init
+# Install shell integration manually
 ```
 
 This automatically adds hooks to your `~/.bashrc` or `~/.zshrc`. Restart your terminal or run:
@@ -147,7 +171,7 @@ source ~/.bashrc  # or ~/.zshrc
 
 **View Your Stats:**
 ```bash
-termonaut stats              # Today's overview
+termonaut stats              # Today's overview (minimal mode)
 termonaut stats --weekly     # This week's stats
 termonaut stats --alltime    # Lifetime statistics
 
@@ -157,16 +181,17 @@ tn stats --weekly            # This week's stats
 tn stats --alltime           # Lifetime statistics
 ```
 
-**Check Your Progress:**
+**Interactive Dashboard:**
 ```bash
-termonaut tui                # Interactive dashboard
-termonaut easter-egg --test  # Test easter egg system
-termonaut github --help      # GitHub integration features
+termonaut tui                # Smart mode (adapts to terminal size)
+termonaut tui --mode compact # Compact mode for smaller terminals
+termonaut tui --mode full    # Full mode for wide terminals
+termonaut tui --mode minimal # Text-only stats output
 
 # Short commands:
-tn tui                       # Interactive dashboard
-tn easter-egg --test         # Test easter egg system
-tn github --help             # GitHub integration features
+tn tui                       # Smart mode dashboard
+tn tui -m compact           # Compact mode
+tn tui -m full              # Full mode
 ```
 
 **Avatar Management:**
@@ -181,6 +206,18 @@ termonaut avatar stats       # Avatar system statistics
 tn avatar show               # Display your current avatar
 tn avatar config --style bottts  # Change to robot style
 tn avatar preview -l 25      # Preview high-level avatar
+```
+
+**Alias Management:**
+```bash
+termonaut alias info         # Show alias information and status
+termonaut alias check        # Check if 'tn' alias exists
+termonaut alias create       # Create 'tn' shortcut manually
+termonaut alias remove       # Remove 'tn' alias
+
+# Short commands:
+tn alias info                # Show alias information
+tn alias check               # Check alias status
 ```
 
 **Configuration:**

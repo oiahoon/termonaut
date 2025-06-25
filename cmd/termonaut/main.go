@@ -23,7 +23,7 @@ import (
 
 var (
 	// Version information (will be set during build)
-	version = "v0.9.5"
+	version = "v0.10.0"
 	commit  = "unknown"
 	date    = "unknown"
 )
@@ -41,6 +41,18 @@ var rootCmd = &cobra.Command{
 	Long: `Termonaut is a gamified terminal productivity tracker that transforms
 your command-line usage into an engaging RPG-like experience.
 
+🆕 New User? Start Here:
+  termonaut setup      Interactive setup wizard (recommended)
+  termonaut quickstart Quick setup with sensible defaults
+
+📊 Daily Usage:
+  termonaut tui        Launch interactive dashboard (smart mode)
+  termonaut stats      Quick stats in terminal
+
+🔧 Configuration:
+  termonaut init       Install shell integration manually
+  termonaut config     Manage settings
+
 Track your terminal habits, earn XP, unlock achievements, and level up
 your productivity - all without leaving your CLI!`,
 	SilenceUsage: true,
@@ -49,9 +61,23 @@ your productivity - all without leaving your CLI!`,
 
 var statsCmd = &cobra.Command{
 	Use:   "stats",
-	Short: "Display terminal usage statistics",
-	Long: `Show comprehensive statistics about your terminal usage including
-command counts, sessions, and productivity metrics.`,
+	Short: "Display terminal usage statistics (极简模式)",
+	Long: `Show terminal usage statistics in minimal shell output format.
+This is the fastest way to check your productivity metrics.
+
+三层查看模式架构:
+  • 极简模式: termonaut stats (shell直接输出，最快速) ← 当前命令
+  • 普通模式: termonaut tui-compact (紧凑TUI，平衡体验)
+  • 完整模式: termonaut tui-enhanced (完整TUI，沉浸体验)
+
+Options:
+  --today     Show only today's statistics
+  --weekly    Show this week's statistics  
+  --monthly   Show this month's statistics
+  --alltime   Show all-time statistics
+  --json      Output in JSON format
+  --minimal   Ultra-minimal one-line output
+  --avatar    Include small ASCII avatar (experimental)`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runStatsCommand(cmd, args)
 	},
@@ -380,10 +406,10 @@ func init() {
 	// Add productivity analytics command (temporarily commented out)
 	// rootCmd.AddCommand(analyticsCmd)
 
-	// Add advanced features (temporarily commented out)
+	// Add advanced features
+	rootCmd.AddCommand(tuiCmd)           // Main TUI command (now enhanced)
 	// rootCmd.AddCommand(heatmapCmd)
 	// rootCmd.AddCommand(dashboardCmd)
-	// rootCmd.AddCommand(tuiCmd)
 	// rootCmd.AddCommand(createAdvancedCmd())
 
 	// Add completion command

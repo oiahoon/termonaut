@@ -426,7 +426,7 @@ termonaut github sync --help           # GitHub integration features
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Development Guide](DEVELOPMENT.md) for:
+We welcome contributions! Please see our [Development Guide](docs/DEVELOPMENT.md) for:
 - Development setup and workflow
 - Architecture overview
 - Testing guidelines
@@ -452,7 +452,7 @@ make build        # Build binary
 - [ ] **v1.0**: Stable release with comprehensive documentation
 - [ ] **v1.x**: Social features and leaderboards
 
-See our [Project Planning](PROJECT_PLANNING.md) for detailed milestones.
+See our [Project Planning](docs/PROJECT_PLANNING.md) for detailed milestones.
 
 ## 📄 License
 

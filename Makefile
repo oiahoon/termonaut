@@ -362,3 +362,22 @@ pre-commit: format lint test ## Run pre-commit checks
 
 release-prep: clean build test lint docs ## Prepare for release
 	@echo "Release preparation complete!"
+
+# Homepage Development
+homepage-dev: ## Start local homepage development server
+	@echo "Starting homepage development server..."
+	@./scripts/dev-homepage.sh
+
+homepage-test: ## Test homepage functionality
+	@echo "Testing homepage..."
+	@./tests/test-homepage.sh
+
+homepage-deploy: ## Deploy homepage to GitHub Pages
+	@echo "Deploying homepage..."
+	@./scripts/deploy-homepage.sh
+
+homepage-validate: ## Validate homepage structure
+	@echo "Validating homepage..."
+	@./scripts/dev-homepage.sh --validate
+
+.PHONY: homepage-dev homepage-test homepage-deploy homepage-validate

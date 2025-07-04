@@ -1,0 +1,53 @@
+# GitHub Pages Configuration for Termonaut
+# This file configures Jekyll settings for GitHub Pages
+
+# Site settings
+title: "Termonaut - Your Terminal Journey Companion"
+description: "Gamified terminal productivity tracker that transforms your command-line usage into an engaging RPG-like experience"
+url: "https://oiahoon.github.io"
+baseurl: "/termonaut"
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+theme: null
+
+# Exclude files from processing
+exclude:
+  - README.md
+  - node_modules/
+  - package*.json
+  - .gitignore
+  - Gemfile*
+  - vendor/
+
+# Include files that start with underscore
+include:
+  - _headers
+  - _redirects
+
+# Plugins
+plugins:
+  - jekyll-sitemap
+  - jekyll-feed
+
+# SEO settings
+author: "oiahoon"
+twitter:
+  username: "oiahoon"
+  card: "summary_large_image"
+
+social:
+  name: "Termonaut"
+  links:
+    - "https://github.com/oiahoon/termonaut"
+
+# GitHub Pages specific settings
+github:
+  repository_url: "https://github.com/oiahoon/termonaut"
+  repository_name: "termonaut"
+  owner_name: "oiahoon"
+
+# Custom variables
+version: "v0.10.2"
+release_date: "2024-07-04"

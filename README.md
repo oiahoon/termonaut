@@ -87,6 +87,26 @@ Termonaut is a lightweight, privacy-focused terminal productivity tracker that g
 - **No Dependencies**: Single binary with zero external requirements
 - **CI Environment Detection**: Automatic quiet mode for 15+ CI platforms
 
+## 🌐 Homepage
+
+Visit our **geek-style homepage** at: **[https://oiahoon.github.io/termonaut](https://oiahoon.github.io/termonaut)**
+
+The homepage features:
+- 🎬 **Interactive terminal demos** showing real Termonaut usage
+- 📊 **Live GitHub stats** and project metrics
+- 🎨 **Terminal-inspired design** with dark theme and animations
+- 📱 **Responsive layout** that works on all devices
+- ⚡ **Performance optimized** with minimal dependencies
+
+### Local Development
+```bash
+# Start local development server
+./scripts/dev-homepage.sh
+
+# Deploy homepage (maintainers only)
+./scripts/deploy-homepage.sh
+```
+
 ## 🚀 Quick Start
 
 ### Installation

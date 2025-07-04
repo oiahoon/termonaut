@@ -1,0 +1,215 @@
+name: 🚀 Deploy Termonaut Homepage
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/deploy-homepage.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Build job
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'docs/package*.json'
+
+      - name: 📦 Install dependencies (if package.json exists)
+        run: |
+          if [ -f "docs/package.json" ]; then
+            cd docs
+            npm ci
+          else
+            echo "No package.json found, skipping npm install"
+          fi
+
+      - name: 🏗️ Build homepage
+        run: |
+          echo "🚀 Building Termonaut homepage..."
+          
+          # Create build directory
+          mkdir -p _site
+          
+          # Copy all docs content to build directory
+          cp -r docs/* _site/
+          
+          # Generate dynamic content
+          echo "📊 Generating dynamic content..."
+          
+          # Update build timestamp
+          BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          sed -i "s/{{BUILD_TIME}}/$BUILD_TIME/g" _site/index.html || true
+          
+          # Update version from main.go
+          if [ -f "cmd/termonaut/main.go" ]; then
+            VERSION=$(grep -o 'version = "v[0-9.]*"' cmd/termonaut/main.go | cut -d'"' -f2)
+            echo "📋 Found version: $VERSION"
+            sed -i "s/{{VERSION}}/$VERSION/g" _site/index.html || true
+          fi
+          
+          # Generate sitemap
+          cat > _site/sitemap.xml << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+            <url>
+              <loc>https://oiahoon.github.io/termonaut/</loc>
+              <lastmod>$BUILD_TIME</lastmod>
+              <changefreq>weekly</changefreq>
+              <priority>1.0</priority>
+            </url>
+          </urlset>
+          EOF
+          
+          # Generate robots.txt
+          cat > _site/robots.txt << EOF
+          User-agent: *
+          Allow: /
+          
+          Sitemap: https://oiahoon.github.io/termonaut/sitemap.xml
+          EOF
+          
+          # Create .nojekyll file to bypass Jekyll processing
+          touch _site/.nojekyll
+          
+          echo "✅ Build completed successfully!"
+
+      - name: 📊 Generate GitHub stats
+        run: |
+          echo "📊 Fetching GitHub repository stats..."
+          
+          # Fetch repository stats using GitHub API
+          REPO_STATS=$(curl -s "https://api.github.com/repos/${{ github.repository }}" || echo '{}')
+          
+          # Extract stats
+          STARS=$(echo "$REPO_STATS" | grep -o '"stargazers_count":[0-9]*' | cut -d':' -f2 || echo '0')
+          FORKS=$(echo "$REPO_STATS" | grep -o '"forks_count":[0-9]*' | cut -d':' -f2 || echo '0')
+          ISSUES=$(echo "$REPO_STATS" | grep -o '"open_issues_count":[0-9]*' | cut -d':' -f2 || echo '0')
+          
+          echo "⭐ Stars: $STARS"
+          echo "🍴 Forks: $FORKS"
+          echo "🐛 Issues: $ISSUES"
+          
+          # Update stats in HTML (fallback values)
+          if [ -f "_site/assets/js/main.js" ]; then
+            sed -i "s/stars-count.*textContent = '.*';/stars-count').textContent = '$STARS';/g" _site/assets/js/main.js || true
+            sed -i "s/forks-count.*textContent = '.*';/forks-count').textContent = '$FORKS';/g" _site/assets/js/main.js || true
+            sed -i "s/issues-count.*textContent = '.*';/issues-count').textContent = '$ISSUES';/g" _site/assets/js/main.js || true
+          fi
+
+      - name: 🔍 Validate HTML
+        run: |
+          echo "🔍 Validating HTML structure..."
+          
+          # Basic HTML validation
+          if [ -f "_site/index.html" ]; then
+            # Check for required elements
+            grep -q "<title>" _site/index.html && echo "✅ Title tag found" || echo "❌ Title tag missing"
+            grep -q "meta.*description" _site/index.html && echo "✅ Meta description found" || echo "❌ Meta description missing"
+            grep -q "og:title" _site/index.html && echo "✅ Open Graph tags found" || echo "❌ Open Graph tags missing"
+            
+            # Check for broken internal links (basic check)
+            echo "🔗 Checking internal links..."
+            grep -o 'href="#[^"]*"' _site/index.html | while read -r link; do
+              id=$(echo "$link" | sed 's/href="#\([^"]*\)"/\1/')
+              if grep -q "id=\"$id\"" _site/index.html; then
+                echo "✅ Link $link is valid"
+              else
+                echo "⚠️  Link $link may be broken"
+              fi
+            done
+          fi
+
+      - name: 🎨 Optimize assets
+        run: |
+          echo "🎨 Optimizing assets..."
+          
+          # Minify CSS (basic minification)
+          if [ -f "_site/assets/css/style.css" ]; then
+            # Remove comments and extra whitespace
+            sed -i 's|/\*.*\*/||g' _site/assets/css/style.css
+            sed -i 's/[[:space:]]*{[[:space:]]*/{/g' _site/assets/css/style.css
+            sed -i 's/[[:space:]]*}[[:space:]]*/}/g' _site/assets/css/style.css
+            sed -i 's/[[:space:]]*;[[:space:]]*/;/g' _site/assets/css/style.css
+            echo "✅ CSS optimized"
+          fi
+          
+          # Add cache headers via meta tags
+          if [ -f "_site/index.html" ]; then
+            sed -i '/<head>/a\    <meta http-equiv="Cache-Control" content="public, max-age=31536000">' _site/index.html
+            echo "✅ Cache headers added"
+          fi
+
+      - name: 📤 Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_site'
+
+  # Deployment job
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: 🚀 Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: 🎉 Deployment success
+        run: |
+          echo "🎉 Termonaut homepage deployed successfully!"
+          echo "🌐 URL: ${{ steps.deployment.outputs.page_url }}"
+          echo "📊 Build completed at: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+
+  # Lighthouse CI job (optional performance testing)
+  lighthouse:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔍 Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v10
+        with:
+          urls: |
+            https://oiahoon.github.io/termonaut/
+          configPath: '.github/lighthouse/lighthouserc.json'
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+        continue-on-error: true
+
+      - name: 📊 Performance report
+        run: |
+          echo "📊 Lighthouse performance test completed"
+          echo "🔗 Check the artifacts for detailed performance reports"

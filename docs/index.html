@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Termonaut - Your Terminal Journey Companion</title>
+    <meta name="description" content="Gamified terminal productivity tracker that transforms your command-line usage into an engaging RPG-like experience">
+    <meta name="keywords" content="terminal, productivity, gamification, CLI, developer tools, command line">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://oiahoon.github.io/termonaut/">
+    <meta property="og:title" content="🚀 Termonaut - Your Terminal Journey Companion">
+    <meta property="og:description" content="Transform your terminal usage into an engaging RPG-like experience with XP, levels, and achievements">
+    <meta property="og:image" content="https://oiahoon.github.io/termonaut/assets/og-image.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://oiahoon.github.io/termonaut/">
+    <meta property="twitter:title" content="🚀 Termonaut - Your Terminal Journey Companion">
+    <meta property="twitter:description" content="Transform your terminal usage into an engaging RPG-like experience">
+    <meta property="twitter:image" content="https://oiahoon.github.io/termonaut/assets/og-image.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="alternate icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="assets/css/style.css">
+    
+    <!-- Scripts -->
+    <script src="https://unpkg.com/typed.js@2.0.16/dist/typed.umd.js"></script>
+    <script src="https://unpkg.com/particles.js@2.0.0/particles.min.js"></script>
+</head>
+<body>
+    <!-- Particles Background -->
+    <div id="particles-js"></div>
+    
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <span class="rocket">🚀</span>
+                <span class="brand">Termonaut</span>
+            </div>
+            <div class="nav-menu">
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#demo" class="nav-link">Demo</a>
+                <a href="#install" class="nav-link">Install</a>
+                <a href="https://github.com/oiahoon/termonaut/wiki" class="nav-link" target="_blank">Docs</a>
+                <a href="https://github.com/oiahoon/termonaut" class="nav-link github-link" target="_blank">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                    GitHub
+                </a>
+            </div>
+            <div class="nav-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1 class="hero-title">
+                        <span class="rocket-icon">🚀</span>
+                        <span class="title-text">Termonaut</span>
+                    </h1>
+                    <p class="hero-subtitle">Your Terminal Journey Companion</p>
+                    <p class="hero-description">
+                        Transform your command-line usage into an engaging RPG-like experience with XP, levels, badges, and achievements—all without leaving your terminal.
+                    </p>
+                    <div class="hero-stats">
+                        <div class="stat">
+                            <span class="stat-number" id="github-stars">⭐</span>
+                            <span class="stat-label">GitHub Stars</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">20+</span>
+                            <span class="stat-label">Achievements</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">45+</span>
+                            <span class="stat-label">Easter Eggs</span>
+                        </div>
+                    </div>
+                    <div class="hero-actions">
+                        <a href="#install" class="btn btn-primary">
+                            <span>Get Started</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="m9 18 6-6-6-6"/>
+                            </svg>
+                        </a>
+                        <a href="#demo" class="btn btn-secondary">
+                            <span>Live Demo</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="5,3 19,12 5,21"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="hero-terminal">
+                    <div class="terminal">
+                        <div class="terminal-header">
+                            <div class="terminal-buttons">
+                                <span class="btn-close"></span>
+                                <span class="btn-minimize"></span>
+                                <span class="btn-maximize"></span>
+                            </div>
+                            <div class="terminal-title">termonaut@localhost</div>
+                        </div>
+                        <div class="terminal-body">
+                            <div class="terminal-line">
+                                <span class="prompt">$</span>
+                                <span class="command" id="typed-command"></span>
+                            </div>
+                            <div class="terminal-output" id="terminal-output">
+                                <!-- Dynamic content will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">🎮 Gamified Terminal Experience</h2>
+                <p class="section-subtitle">Transform your daily CLI tasks into an engaging adventure</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3 class="feature-title">Lightning Fast</h3>
+                    <p class="feature-description">< 1ms command logging overhead with zero impact on your terminal performance</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3 class="feature-title">Smart Tracking</h3>
+                    <p class="feature-description">Intelligent session detection, command categorization, and productivity insights</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🏆</div>
+                    <h3 class="feature-title">Achievement System</h3>
+                    <p class="feature-description">20+ badges to unlock as you master different aspects of terminal usage</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3 class="feature-title">Privacy First</h3>
+                    <p class="feature-description">100% local data storage with smart password and token detection</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎨</div>
+                    <h3 class="feature-title">Beautiful UI</h3>
+                    <p class="feature-description">Modern TUI with adaptive layouts, animations, and customizable themes</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3 class="feature-title">GitHub Integration</h3>
+                    <p class="feature-description">Dynamic badges, profile generation, and automated sync with your repositories</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo" class="demo">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">🎬 See It In Action</h2>
+                <p class="section-subtitle">Experience the magic of gamified terminal productivity</p>
+            </div>
+            <div class="demo-container">
+                <div class="demo-terminal">
+                    <div class="terminal">
+                        <div class="terminal-header">
+                            <div class="terminal-buttons">
+                                <span class="btn-close"></span>
+                                <span class="btn-minimize"></span>
+                                <span class="btn-maximize"></span>
+                            </div>
+                            <div class="terminal-title">Termonaut Demo</div>
+                        </div>
+                        <div class="terminal-body" id="demo-terminal-body">
+                            <!-- Demo content will be dynamically generated -->
+                        </div>
+                    </div>
+                </div>
+                <div class="demo-controls">
+                    <button class="demo-btn active" data-demo="stats">📊 Stats</button>
+                    <button class="demo-btn" data-demo="tui">🎮 TUI</button>
+                    <button class="demo-btn" data-demo="achievements">🏆 Achievements</button>
+                    <button class="demo-btn" data-demo="easter-eggs">🎭 Easter Eggs</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Installation Section -->
+    <section id="install" class="install">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">🚀 Quick Installation</h2>
+                <p class="section-subtitle">Get started in less than 30 seconds</p>
+            </div>
+            <div class="install-methods">
+                <div class="install-method">
+                    <h3 class="method-title">
+                        <span class="method-icon">⚡</span>
+                        Quick Install (Recommended)
+                    </h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-lang">bash</span>
+                            <button class="copy-btn" data-copy="curl -sSL https://raw.githubusercontent.com/oiahoon/termonaut/main/install.sh | bash">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <pre><code>curl -sSL https://raw.githubusercontent.com/oiahoon/termonaut/main/install.sh | bash</code></pre>
+                    </div>
+                </div>
+                <div class="install-method">
+                    <h3 class="method-title">
+                        <span class="method-icon">🍺</span>
+                        Homebrew
+                    </h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-lang">bash</span>
+                            <button class="copy-btn" data-copy="brew tap oiahoon/termonaut && brew install termonaut">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <pre><code>brew tap oiahoon/termonaut
+brew install termonaut</code></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="setup-steps">
+                <h3 class="steps-title">Setup in 3 steps:</h3>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Install Termonaut</h4>
+                            <p>Use any of the installation methods above</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Setup Shell Integration</h4>
+                            <div class="code-inline">
+                                <code>termonaut setup</code>
+                                <button class="copy-btn-small" data-copy="termonaut setup">📋</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Start Your Journey</h4>
+                            <div class="code-inline">
+                                <code>termonaut tui</code>
+                                <button class="copy-btn-small" data-copy="termonaut tui">📋</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- GitHub Stats Section -->
+    <section class="github-stats">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-value" id="stars-count">Loading...</div>
+                    <div class="stat-label">GitHub Stars</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🍴</div>
+                    <div class="stat-value" id="forks-count">Loading...</div>
+                    <div class="stat-label">Forks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📦</div>
+                    <div class="stat-value" id="releases-count">Loading...</div>
+                    <div class="stat-label">Releases</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🐛</div>
+                    <div class="stat-value" id="issues-count">Loading...</div>
+                    <div class="stat-label">Open Issues</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <span class="rocket">🚀</span>
+                        <span class="brand">Termonaut</span>
+                    </div>
+                    <p class="footer-description">
+                        Transform your terminal from a tool into an adventure. Every command is a step toward mastery.
+                    </p>
+                </div>
+                <div class="footer-section">
+                    <h4 class="footer-title">Quick Links</h4>
+                    <ul class="footer-links">
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#demo">Demo</a></li>
+                        <li><a href="#install">Installation</a></li>
+                        <li><a href="https://github.com/oiahoon/termonaut/wiki">Documentation</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4 class="footer-title">Community</h4>
+                    <ul class="footer-links">
+                        <li><a href="https://github.com/oiahoon/termonaut">GitHub</a></li>
+                        <li><a href="https://github.com/oiahoon/termonaut/issues">Issues</a></li>
+                        <li><a href="https://github.com/oiahoon/termonaut/discussions">Discussions</a></li>
+                        <li><a href="https://github.com/oiahoon/termonaut/blob/main/CONTRIBUTING.md">Contributing</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4 class="footer-title">Resources</h4>
+                    <ul class="footer-links">
+                        <li><a href="https://github.com/oiahoon/termonaut/blob/main/docs/QUICK_START.md">Quick Start</a></li>
+                        <li><a href="https://github.com/oiahoon/termonaut/blob/main/docs/TROUBLESHOOTING.md">Troubleshooting</a></li>
+                        <li><a href="https://github.com/oiahoon/termonaut/blob/main/CHANGELOG.md">Changelog</a></li>
+                        <li><a href="https://github.com/oiahoon/termonaut/releases">Releases</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Termonaut. Released under the MIT License.</p>
+                <p>Built with ❤️ for the command-line community</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="assets/js/main.js"></script>
+</body>
+</html>

@@ -34,21 +34,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: 🔧 Setup Node.js
+      - name: 🔧 Setup Node.js (if needed)
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: 'docs/package*.json'
-
-      - name: 📦 Install dependencies (if package.json exists)
-        run: |
-          if [ -f "docs/package.json" ]; then
-            cd docs
-            npm ci
-          else
-            echo "No package.json found, skipping npm install"
-          fi
 
       - name: 🏗️ Build homepage
         run: |
@@ -65,12 +54,13 @@ jobs:
           
           # Update build timestamp
           BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          sed -i "s/{{BUILD_TIME}}/$BUILD_TIME/g" _site/index.html || true
+          echo "📅 Build time: $BUILD_TIME"
           
           # Update version from main.go
           if [ -f "cmd/termonaut/main.go" ]; then
             VERSION=$(grep -o 'version = "v[0-9.]*"' cmd/termonaut/main.go | cut -d'"' -f2)
             echo "📋 Found version: $VERSION"
+            # Replace version placeholder if it exists
             sed -i "s/{{VERSION}}/$VERSION/g" _site/index.html || true
           fi
           

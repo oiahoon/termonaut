@@ -283,8 +283,8 @@ func (db *DB) GetGamificationStats() (*gamification.UserStats, error) {
 		TotalXP:           progress.TotalXP,
 		CurrentLevel:      progress.CurrentLevel,
 		CommandsToday:     basicStats["commands_today"].(int),
-		EarlyBirdCommands: 0, // TODO: Implement time-based tracking
-		NightOwlCommands:  0, // TODO: Implement time-based tracking
+		EarlyBirdCommands: db.getEarlyBirdCommands(),
+		NightOwlCommands:  db.getNightOwlCommands(),
 	}, nil
 }
 
@@ -357,4 +357,37 @@ func (db *DB) isNewCommand(command string) (bool, error) {
 		return false, err
 	}
 	return count <= 1, nil // <= 1 because we just inserted it
+}
+
+// getEarlyBirdCommands counts commands executed between 6 AM and 9 AM
+func (db *DB) getEarlyBirdCommands() int {
+	var count int
+	query := `
+		SELECT COUNT(*) FROM commands 
+		WHERE strftime('%H', timestamp) >= '06' 
+		AND strftime('%H', timestamp) < '09'
+		AND date(timestamp) = date('now')
+	`
+	err := db.conn.QueryRow(query).Scan(&count)
+	if err != nil {
+		db.logger.WithError(err).Error("Failed to get early bird commands count")
+		return 0
+	}
+	return count
+}
+
+// getNightOwlCommands counts commands executed between 10 PM and 2 AM
+func (db *DB) getNightOwlCommands() int {
+	var count int
+	query := `
+		SELECT COUNT(*) FROM commands 
+		WHERE (strftime('%H', timestamp) >= '22' OR strftime('%H', timestamp) < '02')
+		AND date(timestamp) = date('now')
+	`
+	err := db.conn.QueryRow(query).Scan(&count)
+	if err != nil {
+		db.logger.WithError(err).Error("Failed to get night owl commands count")
+		return 0
+	}
+	return count
 }

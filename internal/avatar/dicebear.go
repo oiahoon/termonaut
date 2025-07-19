@@ -1,19 +1,21 @@
 package avatar
 
 import (
+	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/oiahoon/termonaut/internal/network"
 )
 
 // DiceBearClient handles communication with DiceBear API
 type DiceBearClient struct {
-	baseURL    string
-	httpClient *http.Client
+	baseURL       string
+	enhancedClient *network.EnhancedClient
 }
 
 // DiceBearParams represents parameters for DiceBear API
@@ -36,14 +38,12 @@ type DiceBearParams struct {
 // NewDiceBearClient creates a new DiceBear API client
 func NewDiceBearClient(timeout time.Duration) *DiceBearClient {
 	return &DiceBearClient{
-		baseURL: "https://api.dicebear.com/9.x",
-		httpClient: &http.Client{
-			Timeout: timeout,
-		},
+		baseURL:       "https://api.dicebear.com/9.x",
+		enhancedClient: network.NewEnhancedClient(timeout),
 	}
 }
 
-// GenerateAvatar fetches an SVG avatar from DiceBear API
+// GenerateAvatar fetches an SVG avatar from DiceBear API with retry and circuit breaker
 func (c *DiceBearClient) GenerateAvatar(style string, params DiceBearParams) ([]byte, error) {
 	// Build the URL
 	apiURL, err := c.buildURL(style, params)
@@ -51,8 +51,12 @@ func (c *DiceBearClient) GenerateAvatar(style string, params DiceBearParams) ([]
 		return nil, fmt.Errorf("failed to build API URL: %w", err)
 	}
 
-	// Make the HTTP request
-	resp, err := c.httpClient.Get(apiURL)
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// Make the HTTP request with enhanced client
+	resp, err := c.enhancedClient.GetWithContext(ctx, apiURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to make request to DiceBear API: %w", err)
 	}
@@ -63,8 +67,8 @@ func (c *DiceBearClient) GenerateAvatar(style string, params DiceBearParams) ([]
 		return nil, fmt.Errorf("DiceBear API returned status %d: %s", resp.StatusCode, resp.Status)
 	}
 
-	// Read the response body
-	svgData, err := io.ReadAll(resp.Body)
+	// Safely read the response body
+	svgData, err := network.SafeReadBody(resp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}

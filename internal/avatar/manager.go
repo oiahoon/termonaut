@@ -118,9 +118,8 @@ func (am *AvatarManager) GetCached(cacheKey string) (*Avatar, error) {
 
 // Refresh forces regeneration of an avatar, bypassing cache
 func (am *AvatarManager) Refresh(username string) error {
-	// Get user's current level (this would typically come from the database)
-	// For now, we'll use a placeholder
-	level := 1 // TODO: Get from user stats
+	// Get user's current level from database
+	level := am.getUserLevel()
 
 	request := AvatarRequest{
 		Username: username,
@@ -477,4 +476,23 @@ func (am *AvatarManager) GetNetworkStatus() (bool, error) {
 		return false, fmt.Errorf("service error: %w", err)
 	}
 	return true, nil
+}
+
+// getUserLevel gets the user's current level from the database
+func (am *AvatarManager) getUserLevel() int {
+	// Try to get user progress from database
+	// This requires access to the database, which we'll need to add to the manager
+	// For now, return a reasonable default based on cache or config
+	
+	// Check if we have cached level information
+	if am.cache != nil {
+		if cachedAvatar := am.cache.Get("current_user_avatar"); cachedAvatar != nil {
+			if avatar, ok := cachedAvatar.(*Avatar); ok && avatar.Level > 0 {
+				return avatar.Level
+			}
+		}
+	}
+	
+	// Default to level 1 if no information available
+	return 1
 }

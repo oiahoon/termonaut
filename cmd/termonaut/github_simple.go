@@ -75,13 +75,19 @@ var badgesGenerateCmd = &cobra.Command{
 			return fmt.Errorf("failed to get basic stats: %w", err)
 		}
 
+		// Calculate actual productivity score
+		productivityScore := calculateProductivityScore(basicStats, userProgress)
+		
+		// Get actual achievements count
+		achievementsCount := getAchievementsCount(db)
+
 		// Generate badge URLs with simple color logic
 		badges := map[string]string{
 			"XP":           badgeGen.GenerateXPBadge(userProgress),
 			"Commands":     badgeGen.GenerateCommandsBadge(basicStats.TotalCommands),
 			"Streak":       badgeGen.GenerateStreakBadge(userProgress.CurrentStreak),
-			"Productivity": badgeGen.GenerateProductivityBadge(0.8),   // TODO: Calculate actual productivity
-			"Achievements": badgeGen.GenerateAchievementsBadge(5, 10), // TODO: Get actual achievements
+			"Productivity": badgeGen.GenerateProductivityBadge(productivityScore),
+			"Achievements": badgeGen.GenerateAchievementsBadge(achievementsCount, 20), // Total possible achievements
 		}
 
 		if userProgress.LastActivityDate != nil {
@@ -361,4 +367,90 @@ func init() {
 	syncCmd.AddCommand(syncNowCmd)
 	syncCmd.AddCommand(syncStatusCmd)
 	syncCmd.AddCommand(syncSetupCmd)
+}
+
+// calculateProductivityScore calculates a productivity score based on user stats
+func calculateProductivityScore(basicStats *stats.BasicStats, userProgress *models.UserProgress) float64 {
+	if basicStats.TotalCommands == 0 {
+		return 0.0
+	}
+
+	// Base score from command frequency (commands per day)
+	daysActive := float64(basicStats.TotalSessions) / 2.0 // Rough estimate
+	if daysActive < 1 {
+		daysActive = 1
+	}
+	commandsPerDay := float64(basicStats.TotalCommands) / daysActive
+	
+	// Normalize to 0-1 scale (100 commands per day = 1.0)
+	baseScore := commandsPerDay / 100.0
+	if baseScore > 1.0 {
+		baseScore = 1.0
+	}
+
+	// Bonus for consistency (streak)
+	streakBonus := float64(userProgress.CurrentStreak) / 30.0 // 30-day streak = full bonus
+	if streakBonus > 0.5 {
+		streakBonus = 0.5 // Cap at 50% bonus
+	}
+
+	// Bonus for variety (unique commands)
+	varietyBonus := float64(basicStats.UniqueCommands) / float64(basicStats.TotalCommands)
+	if varietyBonus > 0.3 {
+		varietyBonus = 0.3 // Cap at 30% bonus
+	}
+
+	// Final score
+	finalScore := baseScore + streakBonus + varietyBonus
+	if finalScore > 1.0 {
+		finalScore = 1.0
+	}
+
+	return finalScore
+}
+
+// getAchievementsCount gets the actual number of earned achievements
+func getAchievementsCount(db *database.DB) int {
+	userProgress, err := db.GetUserProgress()
+	if err != nil {
+		return 0
+	}
+
+	// Count achievements based on progress
+	count := 0
+	
+	// Basic milestones
+	if userProgress.TotalCommands >= 1 {
+		count++ // First Launch
+	}
+	if userProgress.TotalCommands >= 100 {
+		count++ // Century
+	}
+	if userProgress.TotalCommands >= 1000 {
+		count++ // Millennium
+	}
+	
+	// Level achievements
+	if userProgress.CurrentLevel >= 5 {
+		count++ // Explorer
+	}
+	if userProgress.CurrentLevel >= 10 {
+		count++ // Space Commander
+	}
+	if userProgress.CurrentLevel >= 25 {
+		count++ // Master Navigator
+	}
+	
+	// Streak achievements
+	if userProgress.CurrentStreak >= 7 {
+		count++ // Streak Keeper
+	}
+	if userProgress.CurrentStreak >= 30 {
+		count++ // Cosmic Explorer
+	}
+	if userProgress.LongestStreak >= 100 {
+		count++ // Pro Streaker
+	}
+
+	return count
 }

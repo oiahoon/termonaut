@@ -270,3 +270,82 @@ func GetDataDir(config *Config) string {
 	}
 	return GetConfigDir()
 }
+
+// Validate validates the configuration values
+func Validate(cfg *Config) error {
+	// Validate display mode
+	validDisplayModes := []string{"off", "enter", "ps1", "floating"}
+	if !contains(validDisplayModes, cfg.DisplayMode) {
+		return fmt.Errorf("invalid display_mode: %s, must be one of %v", cfg.DisplayMode, validDisplayModes)
+	}
+
+	// Validate theme
+	validThemes := []string{"minimal", "emoji", "ascii"}
+	if !contains(validThemes, cfg.Theme) {
+		return fmt.Errorf("invalid theme: %s, must be one of %v", cfg.Theme, validThemes)
+	}
+
+	// Validate idle timeout
+	if cfg.IdleTimeoutMinutes < 0 {
+		return fmt.Errorf("idle_timeout_minutes must be non-negative, got %d", cfg.IdleTimeoutMinutes)
+	}
+
+	// Validate UI mode
+	validUIModes := []string{"smart", "compact", "full", "classic", "minimal"}
+	if !contains(validUIModes, cfg.UI.DefaultMode) {
+		return fmt.Errorf("invalid ui.default_mode: %s, must be one of %v", cfg.UI.DefaultMode, validUIModes)
+	}
+
+	// Validate avatar style
+	validAvatarStyles := []string{"pixel-art", "bottts", "adventurer", "avataaars"}
+	if cfg.AvatarStyle != "" && !contains(validAvatarStyles, cfg.AvatarStyle) {
+		return fmt.Errorf("invalid avatar_style: %s, must be one of %v", cfg.AvatarStyle, validAvatarStyles)
+	}
+
+	return nil
+}
+
+// Set sets a configuration value
+func Set(key string, value interface{}) error {
+	viper.Set(key, value)
+	
+	// Load current config
+	cfg, err := Load()
+	if err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	// Validate the updated config
+	if err := Validate(cfg); err != nil {
+		return fmt.Errorf("invalid configuration: %w", err)
+	}
+
+	// Save the updated config
+	return Save(cfg)
+}
+
+// Get gets a configuration value
+func Get(key string) (interface{}, error) {
+	cfg, err := Load()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load config: %w", err)
+	}
+
+	return viper.Get(key), nil
+}
+
+// Reset resets the configuration to defaults
+func Reset() error {
+	cfg := DefaultConfig()
+	return Save(cfg)
+}
+
+// contains checks if a slice contains a string
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
+}

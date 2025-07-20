@@ -395,6 +395,14 @@ func init() {
 	rootCmd.AddCommand(avatarTestCmd)
 	rootCmd.AddCommand(createAdvancedCmd())
 
+	// Add setup and lifecycle commands
+	rootCmd.AddCommand(setupCmd)
+	rootCmd.AddCommand(quickstartCmd)
+	rootCmd.AddCommand(uninstallCmd)
+	rootCmd.AddCommand(cleanupCmd)
+	rootCmd.AddCommand(doctorCmd)
+	rootCmd.AddCommand(statusCmd)
+
 	// Add gamification commands (temporarily commented out)
 	// rootCmd.AddCommand(progressCmd)
 	// rootCmd.AddCommand(achievementsCmd)

@@ -813,9 +813,11 @@ func (d *EnhancedDashboard) calculateStatsWidth() int {
 // formatXP formats XP numbers with proper formatting
 func (d *EnhancedDashboard) formatXP(xp int) string {
 	if xp >= 1000000 {
-		return fmt.Sprintf("%.1fM", float64(xp)/1000000)
-	} else if xp >= 1000 {
+		return fmt.Sprintf("%.2fM", float64(xp)/1000000)
+	} else if xp >= 10000 {
 		return fmt.Sprintf("%.1fK", float64(xp)/1000)
+	} else if xp >= 1000 {
+		return fmt.Sprintf("%.2fK", float64(xp)/1000)
 	}
 	return fmt.Sprintf("%d", xp)
 }
@@ -840,8 +842,8 @@ func (d *EnhancedDashboard) renderXPProgress() string {
 	}
 	
 	// Simple XP calculation (can be enhanced)
-	xpForCurrentLevel := currentLevel * 1000
-	xpForNextLevel := (currentLevel + 1) * 1000
+	xpForCurrentLevel := currentLevel * currentLevel * 100
+	xpForNextLevel := (currentLevel + 1) * (currentLevel + 1) * 100
 	xpProgress := currentXP - xpForCurrentLevel
 	xpNeeded := xpForNextLevel - xpForCurrentLevel
 	
@@ -850,7 +852,7 @@ func (d *EnhancedDashboard) renderXPProgress() string {
 		xpProgress = 0
 	}
 	if xpNeeded <= 0 {
-		xpNeeded = 1000 // Default to 1000 XP per level
+		xpNeeded = 100 * (2 * currentLevel - 1) // Default to 1000 XP per level
 	}
 	
 	percentage := float64(xpProgress) / float64(xpNeeded)
@@ -907,7 +909,7 @@ func (d *EnhancedDashboard) renderRecentCommands() string {
 		Width(d.windowWidth - 4)
 	
 	// Mock recent commands (replace with actual data)
-	commands := []string{
+	commands := []string{// This is a sample
 		"git commit -m \"feat: enhance TUI dashboard\"     2m ago",
 		"go build -o termonaut cmd/termonaut/*.go         5m ago", 
 		"./termonaut tui                                  8m ago",
@@ -1046,7 +1048,7 @@ func (d *EnhancedDashboard) renderProductivityTrends() string {
 💡 Insights:
   • Most active time: 10:00-12:00
   • Favorite category: Development
-  • Efficiency trend: ↗️ Improving`
+  • Efficiency trend: ↗️ Improving`// This is a sample
 	
 	return style.Render(content)
 }
@@ -1081,8 +1083,8 @@ func (d *EnhancedDashboard) renderLevelProgress() string {
 	// Fallback to static display
 	level := d.userProgress.CurrentLevel
 	xp := d.userProgress.TotalXP
-	nextLevelXP := (level + 1) * 100 // Simple calculation
-	currentLevelXP := level * 100
+	nextLevelXP := (level + 1) * (level + 1) * 100 // Simple calculation
+	currentLevelXP := level * level * 100
 	progressXP := xp - currentLevelXP
 	neededXP := nextLevelXP - currentLevelXP
 	
@@ -1144,7 +1146,7 @@ func (d *EnhancedDashboard) renderXPBreakdown() string {
 🎯 Category Mastery: +5 XP
 
 💰 Total Today: +75 XP
-🎮 Multiplier: 1.2x (Streak bonus)`
+🎮 Multiplier: 1.2x (Streak bonus)`// This is a sample
 	
 	return style.Render(content)
 }
@@ -1200,7 +1202,7 @@ Today's Sessions:
 📊 Session Stats:
   Total Sessions: 3
   Average Length: 2.2h
-  Peak Activity: 10:30-11:30`
+  Peak Activity: 10:30-11:30`// This is a sample
 	
 	return style.Render(content)
 }
@@ -1220,7 +1222,7 @@ func (d *EnhancedDashboard) renderActivityHeatmap() string {
 12  ██  ██  ██  ██  ██  █   ░
 18  █   █   ██  █   █   ░   ░
 
-Legend: ░ Low  █ Medium  ██ High`
+Legend: ░ Low  █ Medium  ██ High`// This is a sample
 	
 	return style.Render(content)
 }
@@ -1280,7 +1282,7 @@ func (d *EnhancedDashboard) renderSystemInfo() string {
   Theme: Space
   Avatar: Pixel Art
   Mode: Smart
-  Shell: zsh`
+  Shell: zsh`// This is a sample
 	
 	return style.Render(content)
 }
